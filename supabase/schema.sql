@@ -21,9 +21,13 @@ CREATE TYPE user_role AS ENUM (
 
 CREATE TYPE voice_type AS ENUM (
   'soprano',
+  'soprano_1',
+  'soprano_2',
   'mezzo_soprano',
   'alto',
   'tenor',
+  'tenor_1',
+  'tenor_2',
   'baritone',
   'bass'
 );

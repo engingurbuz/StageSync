@@ -24,10 +24,12 @@ import { useMembers } from "@/hooks/use-members";
 import { toast } from "sonner";
 
 const voiceTypes = [
-  { value: "soprano", label: "Soprano" },
+  { value: "soprano_1", label: "Soprano 1" },
+  { value: "soprano_2", label: "Soprano 2" },
   { value: "mezzo_soprano", label: "Mezzo Soprano" },
   { value: "alto", label: "Alto" },
-  { value: "tenor", label: "Tenor" },
+  { value: "tenor_1", label: "Tenor 1" },
+  { value: "tenor_2", label: "Tenor 2" },
   { value: "baritone", label: "Bariton" },
   { value: "bass", label: "Bas" },
 ];

@@ -12,9 +12,13 @@ import { useMembers } from "@/hooks/use-members";
 
 const voiceLabels: Record<string, string> = {
   soprano: "Soprano",
+  soprano_1: "Soprano 1",
+  soprano_2: "Soprano 2",
   mezzo_soprano: "Mezzo Soprano",
   alto: "Alto",
   tenor: "Tenor",
+  tenor_1: "Tenor 1",
+  tenor_2: "Tenor 2",
   baritone: "Bariton",
   bass: "Bas",
 };
