@@ -26,7 +26,6 @@ import { toast } from "sonner";
 const voiceTypes = [
   { value: "soprano_1", label: "Soprano 1" },
   { value: "soprano_2", label: "Soprano 2" },
-  { value: "mezzo_soprano", label: "Mezzo Soprano" },
   { value: "alto", label: "Alto" },
   { value: "tenor_1", label: "Tenor 1" },
   { value: "tenor_2", label: "Tenor 2" },
