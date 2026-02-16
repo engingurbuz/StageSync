@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StageSync — Koro Yönetim Platformu
 
-## Getting Started
+Müzikal tiyatro ve koro grupları için kapsamlı yönetim platformu. Next.js 16, Supabase ve Tailwind CSS ile geliştirilmiştir.
 
-First, run the development server:
+## Özellikler
+
+- **Üye Yönetimi** — Koro üyelerini ekle, düzenle, ses tiplerine göre filtrele
+- **Yoklama Takibi** — Etkinlik oluştur, katılım durumunu işaretle
+- **Repertuvar Kütüphanesi** — Şarkılar, besteciler, nota dosyaları
+- **Seçmeler & Kadro** — Seçme ilanları, kadro listesi, rol atamaları
+- **Yaratıcı Pano** — Kanban tarzı görev yönetimi, toplantı notları
+- **Duyurular** — Sabitlenebilir, öncelikli duyuru sistemi
+- **Kimlik Doğrulama** — Supabase Auth ile giriş/kayıt/çıkış
+
+## Teknoloji Yığını
+
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript
+- **Stil:** Tailwind CSS v4, Shadcn/UI
+- **Backend:** Supabase (PostgreSQL, Auth, RLS)
+- **Durum Yönetimi:** TanStack React Query
+- **Bildirimler:** Sonner
+
+## Başlangıç
 
 ```bash
+# Bağımlılıkları kur
+npm install
+
+# .env.local dosyasını oluştur (.env.local.example'dan kopyala)
+cp .env.local.example .env.local
+
+# Geliştirme sunucusunu başlat
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Ortam Değişkenleri
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env.local` dosyasına aşağıdaki değişkenleri ekleyin:
 
-## Learn More
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercel üzerinden kolayca deploy edebilirsiniz:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+[![Vercel ile Deploy Et](https://vercel.com/button)](https://vercel.com/new)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
