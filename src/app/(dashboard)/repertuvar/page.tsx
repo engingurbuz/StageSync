@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Music, Play, FileText, Loader2 } from "lucide-react";
+import { Music, Play, FileText, Loader2, Music2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,7 +14,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AddSongDialog } from "@/components/dialogs/add-song-dialog";
+import { EditSongDialog } from "@/components/dialogs/edit-song-dialog";
 import { useSongs } from "@/hooks/use-songs";
+import type { Song } from "@/types/database";
 
 const voiceLabels: Record<string, string> = {
   soprano: "Soprano",
@@ -26,6 +29,13 @@ const voiceLabels: Record<string, string> = {
 
 export default function RepertoirePage() {
   const { songs, isLoading } = useSongs();
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const handleSongClick = (song: Song) => {
+    setSelectedSong(song);
+    setEditDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -65,7 +75,11 @@ export default function RepertoirePage() {
               </TableHeader>
               <TableBody>
                 {songs.map((song) => (
-                  <TableRow key={song.id} className="border-border hover:bg-muted/30">
+                  <TableRow 
+                    key={song.id} 
+                    className="border-border hover:bg-muted/30 cursor-pointer"
+                    onClick={() => handleSongClick(song)}
+                  >
                     <TableCell className="font-medium text-foreground">
                       <div className="flex items-center gap-2">
                         <Music className="h-4 w-4 text-gold" />
@@ -101,9 +115,19 @@ export default function RepertoirePage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-muted-foreground hover:text-gold"
-                            onClick={() => window.open(song.sheet_music_url!, "_blank")}
+                            onClick={(e) => { e.stopPropagation(); window.open(song.sheet_music_url!, "_blank"); }}
                           >
                             <FileText className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {song.midi_url && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-velvet"
+                            onClick={(e) => { e.stopPropagation(); window.open(song.midi_url!, "_blank"); }}
+                          >
+                            <Music2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         {song.audio_url && (
@@ -111,20 +135,13 @@ export default function RepertoirePage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-muted-foreground hover:text-gold"
-                            onClick={() => window.open(song.audio_url!, "_blank")}
+                            onClick={(e) => { e.stopPropagation(); window.open(song.audio_url!, "_blank"); }}
                           >
                             <Play className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        {!song.sheet_music_url && !song.audio_url && (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/30" disabled>
-                              <FileText className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/30" disabled>
-                              <Play className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
+                        {!song.sheet_music_url && !song.midi_url && !song.audio_url && (
+                          <span className="text-[10px] text-muted-foreground">Dosya yok</span>
                         )}
                       </div>
                     </TableCell>
@@ -135,6 +152,13 @@ export default function RepertoirePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Şarkı düzenleme dialogu */}
+      <EditSongDialog
+        song={selectedSong}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
     </div>
   );
 }

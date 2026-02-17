@@ -111,7 +111,7 @@ export interface Song {
 
 export interface Audition {
   id: string;
-  production_id: string;
+  production_id: string | null;
   role_name: string;
   description: string | null;
   voice_required: VoiceType[] | null;
@@ -119,7 +119,7 @@ export interface Audition {
   location: string | null;
   status: AuditionStatus;
   max_slots: number | null;
-  created_by: string;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }

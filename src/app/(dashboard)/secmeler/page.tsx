@@ -3,9 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Theater, Plus, Star, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Theater, Star, Loader2 } from "lucide-react";
 import { useAuditions, useCastRoles } from "@/hooks/use-auditions";
+import { CreateAuditionDialog } from "@/components/dialogs/create-audition-dialog";
 
 const typeLabels: Record<string, string> = {
   lead: "Başrol",
@@ -41,10 +41,7 @@ export default function AuditionsPage() {
             Seçme zamanlarını yönetin ve kadro atamalarını görüntüleyin.
           </p>
         </div>
-        <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
-          <Plus className="mr-2 h-4 w-4" />
-          Seçme Oluştur
-        </Button>
+        <CreateAuditionDialog />
       </div>
 
       <Tabs defaultValue="cast" className="space-y-4">

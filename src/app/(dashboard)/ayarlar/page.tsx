@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Profile } from "@/types/database";
+import { VOICE_TYPES } from "@/lib/constants";
 import {
   Select,
   SelectContent,
@@ -32,6 +33,10 @@ export default function SettingsPage() {
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
 
+  // Email change
+  const [newEmail, setNewEmail] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
+
   // Password change
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,7 +52,10 @@ export default function SettingsPage() {
       setEmergencyName(profile.emergency_contact_name || "");
       setEmergencyPhone(profile.emergency_contact_phone || "");
     }
-  }, [profile]);
+    if (user?.email) {
+      setNewEmail(user.email);
+    }
+  }, [profile, user]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -94,6 +102,28 @@ export default function SettingsPage() {
       toast.error("Şifre değiştirilirken hata oluştu");
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!newEmail || newEmail === user?.email) {
+      toast.info("E-posta adresi değişmedi");
+      return;
+    }
+    if (!newEmail.includes("@")) {
+      toast.error("Geçerli bir e-posta adresi girin");
+      return;
+    }
+    setChangingEmail(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      toast.success("E-posta değişiklik onayı gönderildi. Lütfen yeni e-postanızı kontrol edin.");
+    } catch {
+      toast.error("E-posta değiştirilirken hata oluştu");
+    } finally {
+      setChangingEmail(false);
     }
   };
 
@@ -161,12 +191,26 @@ export default function SettingsPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>E-posta</Label>
-                  <Input
-                    value={user?.email || ""}
-                    disabled
-                    className="bg-muted/30 border-border text-muted-foreground"
-                  />
+                  <Label htmlFor="email">E-posta</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      className="bg-muted/50 border-border flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleChangeEmail}
+                      disabled={changingEmail || newEmail === user?.email}
+                      className="border-border"
+                    >
+                      {changingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : "Güncelle"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefon</Label>
@@ -183,21 +227,17 @@ export default function SettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="voiceType">Ses Tipi</Label>
-                  <Select value={voiceType} onValueChange={setVoiceType}>
+                  <Select value={voiceType || "unassigned"} onValueChange={(val) => setVoiceType(val === "unassigned" ? "" : val)}>
                     <SelectTrigger className="bg-muted/50 border-border">
                       <SelectValue placeholder="Seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="soprano">Soprano</SelectItem>
-                      <SelectItem value="soprano_1">Soprano 1</SelectItem>
-                      <SelectItem value="soprano_2">Soprano 2</SelectItem>
-                      <SelectItem value="mezzo_soprano">Mezzo-Soprano</SelectItem>
-                      <SelectItem value="alto">Alto</SelectItem>
-                      <SelectItem value="tenor">Tenor</SelectItem>
-                      <SelectItem value="tenor_1">Tenor 1</SelectItem>
-                      <SelectItem value="tenor_2">Tenor 2</SelectItem>
-                      <SelectItem value="baritone">Bariton</SelectItem>
-                      <SelectItem value="bass">Bas</SelectItem>
+                      <SelectItem value="unassigned">Belirlenmemiş</SelectItem>
+                      {VOICE_TYPES.map((vt) => (
+                        <SelectItem key={vt.value} value={vt.value}>
+                          {vt.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
