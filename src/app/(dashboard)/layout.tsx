@@ -1,5 +1,8 @@
+"use client";
+
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { PendingFormsCheck } from "@/components/dialogs/pending-forms-check";
 
 export default function DashboardLayout({
   children,
@@ -18,6 +21,9 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      {/* Required forms check - blocks UI until completed */}
+      <PendingFormsCheck />
     </div>
   );
 }

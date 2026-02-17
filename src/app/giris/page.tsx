@@ -52,10 +52,10 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              StageSync&apos;e Hoş Geldiniz
+              Vokal Akademi Müzikal Korosu
             </CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Koro yönetim hesabınıza giriş yapın
+              Koro Takip Sistemine Giriş Yapın
             </p>
           </div>
         </CardHeader>

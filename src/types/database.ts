@@ -12,6 +12,9 @@ export type CastRoleType = "lead" | "understudy" | "ensemble" | "swing";
 export type TaskStatus = "todo" | "in_progress" | "review" | "done";
 export type TaskCategory = "costume" | "choreography" | "staging" | "lighting" | "sound" | "props" | "marketing" | "general";
 export type AuditionStatus = "open" | "closed" | "in_review" | "completed";
+export type FormStatus = "draft" | "active" | "closed";
+export type QuestionType = "text" | "textarea" | "select" | "multiselect" | "checkbox" | "radio" | "date" | "number";
+export type FormTarget = "all" | "member" | "section_leader" | "specific";
 
 // ── Row types ──────────────────────────────────────────────────────────────────
 
@@ -29,6 +32,8 @@ export interface Profile {
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   joined_date: string | null;
+  kvkk_consent: boolean;
+  kvkk_consent_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -117,6 +122,50 @@ export interface Audition {
   created_by: string;
   created_at: string;
   updated_at: string;
+}
+
+// ── Form types ─────────────────────────────────────────────────────────────────
+
+export interface Form {
+  id: string;
+  title: string;
+  description: string | null;
+  status: FormStatus;
+  target: FormTarget;
+  target_roles: UserRole[];
+  is_required: boolean;
+  deadline: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FormQuestion {
+  id: string;
+  form_id: string;
+  question_text: string;
+  question_type: QuestionType;
+  options: { value: string; label: string }[];
+  is_required: boolean;
+  order_index: number;
+  created_at: string;
+}
+
+export interface FormResponse {
+  id: string;
+  form_id: string;
+  user_id: string;
+  answers: Record<string, string | string[] | boolean | number>;
+  submitted_at: string;
+}
+
+export interface FormWithQuestions extends Form {
+  questions: FormQuestion[];
+}
+
+export interface FormWithStats extends Form {
+  total_responses: number;
+  total_target_users: number;
 }
 
 export interface AuditionSignup {

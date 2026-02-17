@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StageSync — Koro Yönetimi",
+  title: "Vokal Akademi — Koro Takip Sistemi",
   description:
-    "Müzikal tiyatro grupları için kapsamlı koro yönetim platformu. Provalar, yoklama, repertuvar, seçmeler ve yaratıcı iş akışlarını yönetin.",
+    "Vokal Akademi Müzikal Korosu için koro takip sistemi. Provalar, yoklama, repertuvar, üye yönetimi ve form sistemleri.",
 };
 
 export default function RootLayout({

@@ -100,7 +100,7 @@ export default function DashboardPage() {
           Ana Sayfa
         </h1>
         <p className="text-sm text-muted-foreground">
-          StageSync&apos;e tekrar hoş geldiniz. İşte topluluğunuzun genel görünümü.
+          Vokal Akademi Koro Takip Sistemine hoş geldiniz. İşte koronuzun genel görünümü.
         </p>
       </div>
 

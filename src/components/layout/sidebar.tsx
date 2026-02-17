@@ -29,6 +29,7 @@ import {
   Settings,
   Sparkles,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -76,6 +77,12 @@ const navItems = [
     icon: Megaphone,
     roles: ["admin", "section_leader", "creative_team", "member"],
   },
+  {
+    title: "Formlar",
+    href: "/formlar",
+    icon: ClipboardList,
+    roles: ["admin", "section_leader", "creative_team", "member"],
+  },
 ];
 
 const bottomNavItems = [
@@ -96,10 +103,10 @@ function SidebarBrand({ collapsed }: { collapsed: boolean }) {
       {!collapsed && (
         <div className="flex flex-col">
           <span className="text-sm font-bold tracking-wide text-foreground">
-            StageSync
+            Vokal Akademi
           </span>
           <span className="text-[10px] font-medium uppercase tracking-widest text-gold/70">
-            Koro Yönetimi
+            Koro Takip Sistemi
           </span>
         </div>
       )}

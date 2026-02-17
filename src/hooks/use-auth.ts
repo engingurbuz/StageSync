@@ -60,12 +60,16 @@ export function useAuth() {
   );
 
   const signUp = useCallback(
-    async (email: string, password: string, fullName: string) => {
+    async (email: string, password: string, fullName: string, phone?: string, joinedDate?: string) => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { full_name: fullName },
+          data: { 
+            full_name: fullName,
+            phone: phone || null,
+            joined_date: joinedDate || null,
+          },
         },
       });
       if (error) throw error;
