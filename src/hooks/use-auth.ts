@@ -80,5 +80,25 @@ export function useAuth() {
     router.refresh();
   }, [supabase.auth, queryClient, router]);
 
-  return { user, profile, loading, signIn, signUp, signOut };
+  const resetPassword = useCallback(
+    async (email: string) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/sifre-yenile`,
+      });
+      if (error) throw error;
+    },
+    [supabase.auth]
+  );
+
+  const updatePassword = useCallback(
+    async (newPassword: string) => {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) throw error;
+    },
+    [supabase.auth]
+  );
+
+  return { user, profile, loading, signIn, signUp, signOut, resetPassword, updatePassword };
 }

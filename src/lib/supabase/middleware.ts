@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect logged-in users away from auth pages
-  const authPaths = ["/giris", "/kayit"];
+  const authPaths = ["/giris", "/kayit", "/sifremi-unuttum"];
   const isAuthPath = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
