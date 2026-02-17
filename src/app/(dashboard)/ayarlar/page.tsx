@@ -189,11 +189,15 @@ export default function SettingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="soprano">Soprano</SelectItem>
+                      <SelectItem value="soprano_1">Soprano 1</SelectItem>
+                      <SelectItem value="soprano_2">Soprano 2</SelectItem>
+                      <SelectItem value="mezzo_soprano">Mezzo-Soprano</SelectItem>
                       <SelectItem value="alto">Alto</SelectItem>
                       <SelectItem value="tenor">Tenor</SelectItem>
-                      <SelectItem value="bass">Bas</SelectItem>
+                      <SelectItem value="tenor_1">Tenor 1</SelectItem>
+                      <SelectItem value="tenor_2">Tenor 2</SelectItem>
                       <SelectItem value="baritone">Bariton</SelectItem>
-                      <SelectItem value="mezzo">Mezzo-Soprano</SelectItem>
+                      <SelectItem value="bass">Bas</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

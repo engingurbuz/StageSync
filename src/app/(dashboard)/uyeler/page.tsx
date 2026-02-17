@@ -8,29 +8,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Search, Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddMemberDialog } from "@/components/dialogs/add-member-dialog";
+import { EditMemberDialog } from "@/components/dialogs/edit-member-dialog";
 import { useMembers } from "@/hooks/use-members";
-
-const voiceLabels: Record<string, string> = {
-  soprano_1: "Soprano 1",
-  soprano_2: "Soprano 2",
-  alto: "Alto",
-  tenor_1: "Tenor 1",
-  tenor_2: "Tenor 2",
-  baritone: "Bariton",
-  bass: "Bas",
-};
-
-const statusLabels: Record<string, string> = {
-  active: "Aktif",
-  inactive: "Pasif",
-  alumni: "Mezun",
-  pending: "Beklemede",
-};
+import { VOICE_TYPES, VOICE_TYPE_LABELS, STATUS_LABELS, ROLE_LABELS } from "@/lib/constants";
+import type { Profile } from "@/types/database";
 
 export default function MembersPage() {
   const { members, isLoading } = useMembers();
   const [search, setSearch] = useState("");
   const [voiceFilter, setVoiceFilter] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<Profile | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const filtered = members.filter((m) => {
     const matchesSearch = m.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -46,6 +34,11 @@ export default function MembersPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+
+  const handleMemberClick = (member: Profile) => {
+    setEditingMember(member);
+    setEditDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -76,24 +69,24 @@ export default function MembersPage() {
           onClick={() => setVoiceFilter(null)}
         >
           <Filter className="mr-2 h-4 w-4" />
-          {voiceFilter ? voiceLabels[voiceFilter] || voiceFilter : "Tümü"}
+          {voiceFilter ? VOICE_TYPE_LABELS[voiceFilter] || voiceFilter : "Tümü"}
         </Button>
       </div>
 
       {/* Voice filter chips */}
       <div className="flex flex-wrap gap-2">
-        {Object.entries(voiceLabels).map(([key, label]) => (
+        {VOICE_TYPES.map((vt) => (
           <Badge
-            key={key}
+            key={vt.value}
             variant="outline"
             className={`cursor-pointer transition-colors ${
-              voiceFilter === key
+              voiceFilter === vt.value
                 ? "border-gold text-gold bg-gold/10"
                 : "border-border text-muted-foreground hover:border-gold/50"
             }`}
-            onClick={() => setVoiceFilter(voiceFilter === key ? null : key)}
+            onClick={() => setVoiceFilter(voiceFilter === vt.value ? null : vt.value)}
           >
-            {label}
+            {vt.label}
           </Badge>
         ))}
       </div>
@@ -112,7 +105,11 @@ export default function MembersPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((member) => (
-            <Card key={member.id} className="border-border bg-card transition-colors hover:border-gold/30">
+            <Card
+              key={member.id}
+              className="border-border bg-card transition-colors hover:border-gold/30 cursor-pointer"
+              onClick={() => handleMemberClick(member)}
+            >
               <CardContent className="flex items-center gap-4 p-4">
                 <Avatar className="h-12 w-12 border-2 border-gold/20">
                   <AvatarImage src={member.avatar_url || ""} />
@@ -123,12 +120,15 @@ export default function MembersPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{member.full_name}</p>
                   <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {member.voice_type && (
                       <Badge variant="outline" className="border-gold/30 text-gold text-[10px]">
-                        {voiceLabels[member.voice_type] || member.voice_type}
+                        {VOICE_TYPE_LABELS[member.voice_type] || member.voice_type}
                       </Badge>
                     )}
+                    <Badge variant="outline" className="border-velvet/30 text-velvet text-[10px]">
+                      {ROLE_LABELS[member.role] || member.role}
+                    </Badge>
                     <Badge
                       variant="outline"
                       className={
@@ -137,7 +137,7 @@ export default function MembersPage() {
                           : "border-muted-foreground/30 text-muted-foreground text-[10px]"
                       }
                     >
-                      {statusLabels[member.status] || member.status}
+                      {STATUS_LABELS[member.status] || member.status}
                     </Badge>
                   </div>
                 </div>
@@ -146,6 +146,13 @@ export default function MembersPage() {
           ))}
         </div>
       )}
+
+      {/* Üye düzenleme dialogu */}
+      <EditMemberDialog
+        member={editingMember}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
     </div>
   );
 }

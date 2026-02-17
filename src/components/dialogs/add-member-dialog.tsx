@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,23 +21,7 @@ import {
 import { Users, Loader2 } from "lucide-react";
 import { useMembers } from "@/hooks/use-members";
 import { toast } from "sonner";
-
-const voiceTypes = [
-  { value: "soprano_1", label: "Soprano 1" },
-  { value: "soprano_2", label: "Soprano 2" },
-  { value: "alto", label: "Alto" },
-  { value: "tenor_1", label: "Tenor 1" },
-  { value: "tenor_2", label: "Tenor 2" },
-  { value: "baritone", label: "Bariton" },
-  { value: "bass", label: "Bas" },
-];
-
-const roles = [
-  { value: "member", label: "Üye" },
-  { value: "section_leader", label: "Grup Lideri" },
-  { value: "creative_team", label: "Yaratıcı Ekip" },
-  { value: "admin", label: "Yönetici" },
-];
+import { VOICE_TYPES, USER_ROLES } from "@/lib/constants";
 
 export function AddMemberDialog() {
   const [open, setOpen] = useState(false);
@@ -129,7 +112,7 @@ export function AddMemberDialog() {
                   <SelectValue placeholder="Seçin" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  {voiceTypes.map((vt) => (
+                  {VOICE_TYPES.map((vt) => (
                     <SelectItem key={vt.value} value={vt.value}>
                       {vt.label}
                     </SelectItem>
@@ -147,7 +130,7 @@ export function AddMemberDialog() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  {roles.map((r) => (
+                  {USER_ROLES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
                       {r.label}
                     </SelectItem>
