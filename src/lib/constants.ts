@@ -5,13 +5,15 @@ export const VOICE_TYPES: { value: VoiceType; label: string }[] = [
   { value: "soprano", label: "Soprano" },
   { value: "soprano_1", label: "Soprano 1" },
   { value: "soprano_2", label: "Soprano 2" },
-  { value: "mezzo_soprano", label: "Mezzo-Soprano" },
   { value: "alto", label: "Alto" },
+  { value: "alto_1", label: "Alto 1" },
+  { value: "alto_2", label: "Alto 2" },
   { value: "tenor", label: "Tenor" },
   { value: "tenor_1", label: "Tenor 1" },
   { value: "tenor_2", label: "Tenor 2" },
-  { value: "baritone", label: "Bariton" },
   { value: "bass", label: "Bas" },
+  { value: "bass_1", label: "Bas 1" },
+  { value: "bass_2", label: "Bas 2" },
 ];
 
 export const VOICE_TYPE_LABELS: Record<string, string> = Object.fromEntries(

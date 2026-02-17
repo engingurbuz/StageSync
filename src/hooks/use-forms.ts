@@ -154,6 +154,7 @@ export function useForms() {
       options?: { value: string; label: string }[];
       is_required?: boolean;
       order_index?: number;
+      profile_field_name?: string | null;
     }) => {
       const { data, error } = await supabase
         .from("form_questions")
@@ -203,18 +204,61 @@ export function useForms() {
       form_id: string;
       user_id: string;
       answers: Record<string, string | string[] | boolean | number>;
+      questions?: FormQuestion[];
     }) => {
+      const { questions, ...responseData } = response;
+      
+      // Save form response
       const { data, error } = await supabase
         .from("form_responses")
-        .upsert(response, { onConflict: "form_id,user_id" })
+        .upsert(responseData, { onConflict: "form_id,user_id" })
         .select()
         .single();
       if (error) throw error;
+
+      // Update profile custom_fields if questions have profile_field_name
+      if (questions && questions.length > 0) {
+        const profileFields: Record<string, string> = {};
+        
+        for (const q of questions) {
+          if (q.profile_field_name && response.answers[q.id] !== undefined) {
+            const answer = response.answers[q.id];
+            // Convert answer to string
+            profileFields[q.profile_field_name] = Array.isArray(answer)
+              ? answer.join(", ")
+              : String(answer);
+          }
+        }
+
+        if (Object.keys(profileFields).length > 0) {
+          // Get current custom_fields
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("custom_fields")
+            .eq("id", response.user_id)
+            .single();
+
+          const existingFields = (profile?.custom_fields as Record<string, string>) || {};
+          const mergedFields = { ...existingFields, ...profileFields };
+
+          // Update profile
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({ custom_fields: mergedFields })
+            .eq("id", response.user_id);
+
+          if (profileError) {
+            console.error("Failed to update profile custom_fields:", profileError);
+          }
+        }
+      }
+
       return data as FormResponse;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["pending-forms"] });
       queryClient.invalidateQueries({ queryKey: ["form-responses", variables.form_id] });
+      queryClient.invalidateQueries({ queryKey: ["members"] });
     },
   });
 

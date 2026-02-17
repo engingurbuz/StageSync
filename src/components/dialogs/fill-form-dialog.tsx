@@ -74,6 +74,7 @@ export function FillFormDialog({ form, open, onOpenChange }: FillFormDialogProps
         form_id: form.id,
         user_id: user.id,
         answers,
+        questions: formWithQuestions.questions,
       });
       toast.success("Form başarıyla gönderildi");
       onOpenChange(false);

@@ -4,7 +4,7 @@
 // ============================================================================
 
 export type UserRole = "admin" | "section_leader" | "creative_team" | "member";
-export type VoiceType = "soprano" | "soprano_1" | "soprano_2" | "mezzo_soprano" | "alto" | "tenor" | "tenor_1" | "tenor_2" | "baritone" | "bass";
+export type VoiceType = "soprano" | "soprano_1" | "soprano_2" | "alto" | "alto_1" | "alto_2" | "tenor" | "tenor_1" | "tenor_2" | "bass" | "bass_1" | "bass_2";
 export type MemberStatus = "active" | "inactive" | "alumni" | "pending";
 export type EventType = "rehearsal" | "performance" | "audition" | "meeting" | "workshop" | "social";
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
@@ -34,6 +34,7 @@ export interface Profile {
   joined_date: string | null;
   kvkk_consent: boolean;
   kvkk_consent_date: string | null;
+  custom_fields: Record<string, string> | null;
   created_at: string;
   updated_at: string;
 }
@@ -148,6 +149,7 @@ export interface FormQuestion {
   options: { value: string; label: string }[];
   is_required: boolean;
   order_index: number;
+  profile_field_name: string | null; // If set, answer will be saved to profile.custom_fields
   created_at: string;
 }
 

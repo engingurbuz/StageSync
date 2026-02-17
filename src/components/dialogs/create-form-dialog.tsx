@@ -55,6 +55,7 @@ interface QuestionDraft {
   question_type: QuestionType;
   options: { value: string; label: string }[];
   is_required: boolean;
+  profile_field_name: string | null;
 }
 
 export function CreateFormDialog({ open, onOpenChange }: CreateFormDialogProps) {
@@ -79,6 +80,7 @@ export function CreateFormDialog({ open, onOpenChange }: CreateFormDialogProps) 
         question_type: "text",
         options: [],
         is_required: false,
+        profile_field_name: null,
       },
     ]);
   };
@@ -159,6 +161,7 @@ export function CreateFormDialog({ open, onOpenChange }: CreateFormDialogProps) 
           options: q.options,
           is_required: q.is_required,
           order_index: i,
+          profile_field_name: q.profile_field_name,
         });
       }
 
@@ -399,6 +402,34 @@ export function CreateFormDialog({ open, onOpenChange }: CreateFormDialogProps) 
                             }
                           />
                           <span className="text-xs text-muted-foreground">Zorunlu soru</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={question.profile_field_name !== null}
+                              onCheckedChange={(checked) =>
+                                updateQuestion(question.id, {
+                                  profile_field_name: checked ? "" : null,
+                                })
+                              }
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              Cevabı üye profiline kaydet
+                            </span>
+                          </div>
+                          {question.profile_field_name !== null && (
+                            <Input
+                              value={question.profile_field_name}
+                              onChange={(e) =>
+                                updateQuestion(question.id, {
+                                  profile_field_name: e.target.value,
+                                })
+                              }
+                              placeholder="Profil alan adı (örn: acil_iletisim)"
+                              className="text-xs h-8 bg-background border-border"
+                            />
+                          )}
                         </div>
                       </div>
                     </div>
