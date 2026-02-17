@@ -122,12 +122,12 @@ export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialo
             <div className="space-y-2">
               <Label>Ses Tipi</Label>
               {canEditVoice ? (
-                <Select value={voiceType} onValueChange={setVoiceType}>
+                <Select value={voiceType || "unassigned"} onValueChange={(val) => setVoiceType(val === "unassigned" ? "" : val)}>
                   <SelectTrigger className="bg-muted/30 border-border">
                     <SelectValue placeholder="Seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Belirlenmemiş</SelectItem>
+                    <SelectItem value="unassigned">Belirlenmemiş</SelectItem>
                     {VOICE_TYPES.map((vt) => (
                       <SelectItem key={vt.value} value={vt.value}>
                         {vt.label}
