@@ -120,14 +120,17 @@ export function useCastRoles(productionId?: string) {
     queryFn: async () => {
       let query = supabase
         .from("cast_roles")
-        .select("*, profiles(full_name, voice_type)")
+        .select("*, profiles(full_name, voice_type), songs(title)")
         .order("role_type");
       if (productionId) {
         query = query.eq("production_id", productionId);
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data as (CastRole & { profiles: { full_name: string; voice_type: string | null } | null })[];
+      return data as (CastRole & {
+        profiles: { full_name: string; voice_type: string | null } | null;
+        songs: { title: string } | null;
+      })[];
     },
   });
 

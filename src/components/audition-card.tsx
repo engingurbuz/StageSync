@@ -78,11 +78,13 @@ export function AuditionCard({
       toast.error("En az bir başvuru için Asil veya Yedek seçin.");
       return;
     }
+    const firstSongId = auditionSongs.length > 0 ? (auditionSongs[0] as { song_id: string }).song_id : null;
     setTransferring(true);
     try {
       for (const s of toTransfer) {
         await addCastRole.mutateAsync({
           production_id: audition.production_id ?? null,
+          song_id: firstSongId,
           member_id: s.member_id,
           role_name: audition.role_name,
           role_type: s.selected_role_type === "lead" ? "lead" : "understudy",

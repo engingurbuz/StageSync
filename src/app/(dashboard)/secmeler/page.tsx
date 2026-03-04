@@ -30,25 +30,44 @@ const typeStyles: Record<string, string> = {
   swing: "bg-purple-500/10 text-purple-400 border-purple-500/30",
 };
 
-type CastRoleWithProfile = CastRole & { profiles?: { full_name: string; voice_type: string | null } | null };
+type CastRoleWithProfile = CastRole & {
+  profiles?: { full_name: string; voice_type: string | null } | null;
+  songs?: { title: string } | null;
+};
 
-function groupCastByRoleName(roles: CastRoleWithProfile[]) {
-  const byRoleName = new Map<
-    string,
-    { lead: CastRoleWithProfile[]; understudy: CastRoleWithProfile[]; ensemble: CastRoleWithProfile[]; swing: CastRoleWithProfile[] }
-  >();
+type RoleGroup = {
+  lead: CastRoleWithProfile[];
+  understudy: CastRoleWithProfile[];
+  ensemble: CastRoleWithProfile[];
+  swing: CastRoleWithProfile[];
+};
+
+function groupCastBySongAndRole(roles: CastRoleWithProfile[]): { songTitle: string; roleName: string; group: RoleGroup }[] {
+  const bySongAndRole = new Map<string, RoleGroup>();
+  const keys: { songTitle: string; roleName: string }[] = [];
   for (const r of roles) {
-    const name = r.role_name || "—";
-    if (!byRoleName.has(name)) {
-      byRoleName.set(name, { lead: [], understudy: [], ensemble: [], swing: [] });
+    const songTitle = (r as { songs?: { title: string } }).songs?.title?.trim() || "Şarkı belirtilmemiş";
+    const roleName = r.role_name || "—";
+    const key = `${songTitle}\n${roleName}`;
+    if (!bySongAndRole.has(key)) {
+      bySongAndRole.set(key, { lead: [], understudy: [], ensemble: [], swing: [] });
+      keys.push({ songTitle, roleName });
     }
-    const group = byRoleName.get(name)!;
+    const group = bySongAndRole.get(key)!;
     if (r.role_type === "lead") group.lead.push(r);
     else if (r.role_type === "understudy") group.understudy.push(r);
     else if (r.role_type === "ensemble") group.ensemble.push(r);
     else if (r.role_type === "swing") group.swing.push(r);
   }
-  return Array.from(byRoleName.entries()).sort(([a], [b]) => a.localeCompare(b, "tr"));
+  keys.sort((a, b) => {
+    const c = a.songTitle.localeCompare(b.songTitle, "tr");
+    return c !== 0 ? c : a.roleName.localeCompare(b.roleName, "tr");
+  });
+  return keys.map(({ songTitle, roleName }) => ({
+    songTitle,
+    roleName,
+    group: bySongAndRole.get(`${songTitle}\n${roleName}`)!,
+  }));
 }
 
 const ROLE_TYPE_SECTIONS: { key: CastRoleType; label: string }[] = [
@@ -74,8 +93,8 @@ export default function AuditionsPage() {
   const [editingCastRole, setEditingCastRole] = useState<(CastRole & { profiles?: { full_name: string; voice_type: string | null } | null }) | null>(null);
   const [editCastOpen, setEditCastOpen] = useState(false);
   const canEditCast = checkPermission(profile, "secmeler", "edit", permissions);
-  const castGroupedByRoleName = useMemo(
-    () => groupCastByRoleName(castRoles as CastRoleWithProfile[]),
+  const castGroupedBySongAndRole = useMemo(
+    () => groupCastBySongAndRole(castRoles as CastRoleWithProfile[]),
     [castRoles]
   );
 
@@ -164,15 +183,18 @@ export default function AuditionsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {castGroupedByRoleName.map(([roleName, group]) => (
-                    <div key={roleName} className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-                      <div className="flex items-center gap-2 px-4 py-3 bg-muted/40 border-b border-border">
-                        <Music2 className="h-4 w-4 text-gold" />
-                        <h3 className="font-semibold text-foreground">{roleName}</h3>
+                  {castGroupedBySongAndRole.map(({ songTitle, roleName, group }) => (
+                    <div key={`${songTitle}-${roleName}`} className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                      <div className="px-4 py-3 bg-muted/40 border-b border-border space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Music2 className="h-4 w-4 text-gold" />
+                          <span className="text-sm font-medium text-muted-foreground">{songTitle}</span>
+                        </div>
+                        <h3 className="font-semibold text-foreground pl-6">{roleName}</h3>
                       </div>
                       <div className="p-3 space-y-4">
                         {ROLE_TYPE_SECTIONS.map(({ key, label }) => {
-                          const list = group[key as keyof typeof group];
+                          const list = group[key as keyof RoleGroup];
                           if (!list?.length) return null;
                           return (
                             <div key={key}>
