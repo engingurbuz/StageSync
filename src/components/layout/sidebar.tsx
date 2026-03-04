@@ -17,6 +17,7 @@ import {
 import {
   LayoutDashboard,
   Users,
+  Calendar,
   CalendarCheck,
   Music,
   Theater,
@@ -49,6 +50,12 @@ const navItems = [
     href: "/uyeler",
     icon: Users,
     section: "uyeler" as SystemSection,
+  },
+  {
+    title: "Etkinlikler",
+    href: "/etkinlikler",
+    icon: Calendar,
+    section: "etkinlikler" as SystemSection,
   },
   {
     title: "Yoklama",

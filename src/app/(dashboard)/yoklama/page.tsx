@@ -1,25 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarCheck, Loader2, MapPin, Clock } from "lucide-react";
-import { CreateEventDialog } from "@/components/dialogs/create-event-dialog";
+import { Button } from "@/components/ui/button";
+import { CalendarCheck, Loader2, MapPin, Clock, ClipboardCheck } from "lucide-react";
 import { useEvents } from "@/hooks/use-events";
+import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { checkPermission } from "@/lib/constants";
+import { EVENT_TYPE_LABELS } from "@/lib/constants";
+import { AttendanceEntryDialog } from "@/components/dialogs/attendance-entry-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-
-const eventTypeLabels: Record<string, string> = {
-  rehearsal: "Prova",
-  performance: "Gösteri",
-  audition: "Seçme",
-  meeting: "Toplantı",
-  workshop: "Çalıştay",
-  social: "Sosyal",
-};
+import type { Event } from "@/types/database";
 
 const eventTypeColors: Record<string, string> = {
   rehearsal: "bg-gold/10 text-gold border-gold/30",
   performance: "bg-velvet/10 text-velvet border-velvet/30",
+  concert: "bg-velvet/10 text-velvet border-velvet/30",
   audition: "bg-purple-500/10 text-purple-400 border-purple-500/30",
   meeting: "bg-blue-500/10 text-blue-400 border-blue-500/30",
   workshop: "bg-green-500/10 text-green-400 border-green-500/30",
@@ -27,7 +26,17 @@ const eventTypeColors: Record<string, string> = {
 };
 
 export default function AttendancePage() {
+  const { profile } = useAuth();
+  const { permissions } = usePermissions();
   const { upcomingEvents, pastEvents, isLoading } = useEvents();
+  const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const canEditAttendance = checkPermission(profile, "yoklama", "edit", permissions);
+
+  const openAttendanceFor = (event: Event) => {
+    setAttendanceEvent(event);
+    setAttendanceDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -35,11 +44,19 @@ export default function AttendancePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Yoklama</h1>
           <p className="text-sm text-muted-foreground">
-            Prova yoklamalarını takip edin ve etkinlikleri yönetin.
+            Etkinliklere ait yoklama girişlerini görüntüleyin ve (yetkiniz varsa) girin. Etkinlik oluşturmak için Etkinlikler sayfasını kullanın.
           </p>
         </div>
-        <CreateEventDialog />
       </div>
+
+      <AttendanceEntryDialog
+        event={attendanceEvent}
+        open={attendanceDialogOpen}
+        onOpenChange={(open) => {
+          setAttendanceDialogOpen(open);
+          if (!open) setAttendanceEvent(null);
+        }}
+      />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -63,7 +80,7 @@ export default function AttendancePage() {
             <CardContent>
               {upcomingEvents.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Yaklaşan etkinlik yok. Yeni bir etkinlik oluşturun.
+                  Yaklaşan etkinlik yok. Etkinlikler sayfasından yeni etkinlik ekleyebilirsiniz.
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -98,8 +115,19 @@ export default function AttendancePage() {
                         </div>
                       </div>
                       <Badge variant="outline" className={eventTypeColors[event.event_type] || ""}>
-                        {eventTypeLabels[event.event_type] || event.event_type}
+                        {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
                       </Badge>
+                      {canEditAttendance && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() => openAttendanceFor(event)}
+                        >
+                          <ClipboardCheck className="h-4 w-4 mr-1" />
+                          Yoklama girişi
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -132,7 +160,7 @@ export default function AttendancePage() {
                         <span className="text-foreground">{event.title}</span>
                       </div>
                       <Badge variant="outline" className={eventTypeColors[event.event_type] || ""}>
-                        {eventTypeLabels[event.event_type] || event.event_type}
+                        {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
                       </Badge>
                     </div>
                   ))}

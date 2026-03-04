@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/errors";
 import type { Event, Attendance } from "@/types/database";
 
 export function useEvents() {
@@ -38,7 +39,23 @@ export function useEvents() {
       event: Omit<Event, "id" | "created_at" | "updated_at">
     ) => {
       const { error } = await supabase.from("events").insert(event);
-      if (error) throw error;
+      if (error) throw new Error(getFriendlyErrorMessage(error, { create: "etkinlik oluşturma" }));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+
+  const updateEvent = useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: Partial<Omit<Event, "id" | "created_at" | "created_by">>;
+    }) => {
+      const { error } = await supabase.from("events").update(updates).eq("id", id);
+      if (error) throw new Error(getFriendlyErrorMessage(error, { edit: "etkinlik düzenleme" }));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -48,14 +65,14 @@ export function useEvents() {
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("events").delete().eq("id", id);
-      if (error) throw error;
+      if (error) throw new Error(getFriendlyErrorMessage(error, { delete: "etkinlik silme" }));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 
-  return { events, upcomingEvents, pastEvents, isLoading, error, addEvent, deleteEvent };
+  return { events, upcomingEvents, pastEvents, isLoading, error, addEvent, updateEvent, deleteEvent };
 }
 
 export function useAttendance(eventId?: string) {
@@ -89,7 +106,7 @@ export function useAttendance(eventId?: string) {
       const { error } = await supabase.from("attendance").upsert(record, {
         onConflict: "event_id,member_id",
       });
-      if (error) throw error;
+      if (error) throw new Error(getFriendlyErrorMessage(error, { action: "yoklama girişi" }));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attendance"] });

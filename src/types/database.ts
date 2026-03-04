@@ -6,7 +6,7 @@
 export type UserRole = "admin" | "choir_leader" | "section_leader" | "creative_team" | "member" | "observer";
 export type VoiceType = "soprano" | "soprano_1" | "soprano_2" | "alto" | "alto_1" | "alto_2" | "tenor" | "tenor_1" | "tenor_2" | "bass" | "bass_1" | "bass_2";
 export type MemberStatus = "active" | "inactive" | "alumni" | "pending";
-export type EventType = "rehearsal" | "performance" | "audition" | "meeting" | "workshop" | "social";
+export type EventType = "rehearsal" | "performance" | "concert" | "audition" | "meeting" | "workshop" | "social";
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 export type CastRoleType = "lead" | "understudy" | "ensemble" | "swing";
 export type TaskStatus = "todo" | "in_progress" | "review" | "done";
@@ -21,6 +21,7 @@ export type FormTarget = "all" | "member" | "section_leader" | "specific";
 export type SystemSection =
   | "ana-sayfa"
   | "uyeler"
+  | "etkinlikler"
   | "yoklama"
   | "repertuvar"
   | "secmeler"
@@ -99,6 +100,8 @@ export interface Event {
   event_type: EventType;
   production_id: string | null;
   location: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
   start_time: string;
   end_time: string;
   is_mandatory: boolean;

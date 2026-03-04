@@ -19,19 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, MapPin } from "lucide-react";
 import { useEvents } from "@/hooks/use-events";
 import { useAuth } from "@/hooks/use-auth";
+import { EVENT_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
-
-const eventTypes = [
-  { value: "rehearsal", label: "Prova" },
-  { value: "performance", label: "Gösteri" },
-  { value: "audition", label: "Seçme" },
-  { value: "meeting", label: "Toplantı" },
-  { value: "workshop", label: "Çalıştay" },
-  { value: "social", label: "Sosyal" },
-];
+import type { EventType } from "@/types/database";
 
 export function CreateEventDialog() {
   const [open, setOpen] = useState(false);
@@ -39,8 +32,10 @@ export function CreateEventDialog() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    event_type: "rehearsal",
+    event_type: "rehearsal" as EventType,
     location: "",
+    location_lat: "" as string | number,
+    location_lng: "" as string | number,
     start_time: "",
     end_time: "",
     is_mandatory: true,
@@ -54,11 +49,15 @@ export function CreateEventDialog() {
       return;
     }
     try {
+      const lat = form.location_lat === "" ? null : Number(form.location_lat);
+      const lng = form.location_lng === "" ? null : Number(form.location_lng);
       await addEvent.mutateAsync({
         title: form.title,
         description: form.description || null,
-        event_type: form.event_type as "rehearsal" | "performance" | "audition" | "meeting" | "workshop" | "social",
+        event_type: form.event_type,
         location: form.location || null,
+        location_lat: lat !== null && !Number.isNaN(lat) ? lat : null,
+        location_lng: lng !== null && !Number.isNaN(lng) ? lng : null,
         start_time: new Date(form.start_time).toISOString(),
         end_time: new Date(form.end_time).toISOString(),
         is_mandatory: form.is_mandatory,
@@ -72,6 +71,8 @@ export function CreateEventDialog() {
         description: "",
         event_type: "rehearsal",
         location: "",
+        location_lat: "",
+        location_lng: "",
         start_time: "",
         end_time: "",
         is_mandatory: true,
@@ -110,13 +111,13 @@ export function CreateEventDialog() {
               <Label>Etkinlik Türü</Label>
               <Select
                 value={form.event_type}
-                onValueChange={(v) => setForm({ ...form, event_type: v })}
+                onValueChange={(v) => setForm({ ...form, event_type: v as EventType })}
               >
                 <SelectTrigger className="bg-muted/30 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  {eventTypes.map((t) => (
+                  {EVENT_TYPES.map((t) => (
                     <SelectItem key={t.value} value={t.value}>
                       {t.label}
                     </SelectItem>
@@ -125,16 +126,49 @@ export function CreateEventDialog() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="location">Konum</Label>
+              <Label htmlFor="location">Konum (adres)</Label>
               <Input
                 id="location"
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                placeholder="Ana salon"
+                placeholder="Ana salon veya adres"
                 className="bg-muted/30 border-border"
               />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="location_lat" className="flex items-center gap-1 text-muted-foreground">
+                <MapPin className="h-3 w-3" /> Enlem (opsiyonel)
+              </Label>
+              <Input
+                id="location_lat"
+                type="number"
+                step="any"
+                value={form.location_lat}
+                onChange={(e) => setForm({ ...form, location_lat: e.target.value })}
+                placeholder="41.0082"
+                className="bg-muted/30 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location_lng" className="flex items-center gap-1 text-muted-foreground">
+                <MapPin className="h-3 w-3" /> Boylam (opsiyonel)
+              </Label>
+              <Input
+                id="location_lng"
+                type="number"
+                step="any"
+                value={form.location_lng}
+                onChange={(e) => setForm({ ...form, location_lng: e.target.value })}
+                placeholder="28.9784"
+                className="bg-muted/30 border-border"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Haritadan konum seçmek için enlem/boylam girebilir veya Google Maps’te arayıp koordinatları kopyalayabilirsiniz.
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="start">Başlangıç *</Label>

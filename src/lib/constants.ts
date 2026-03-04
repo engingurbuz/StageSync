@@ -46,11 +46,27 @@ export const STATUS_LABELS: Record<string, string> = Object.fromEntries(
   MEMBER_STATUSES.map((s) => [s.value, s.label])
 );
 
+// Etkinlik türleri (Konser dahil)
+export const EVENT_TYPES = [
+  { value: "rehearsal", label: "Prova" },
+  { value: "performance", label: "Gösteri" },
+  { value: "concert", label: "Konser" },
+  { value: "audition", label: "Seçme" },
+  { value: "meeting", label: "Toplantı" },
+  { value: "workshop", label: "Çalıştay" },
+  { value: "social", label: "Sosyal" },
+] as const;
+
+export const EVENT_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  EVENT_TYPES.map((e) => [e.value, e.label])
+);
+
 // ── Sistem Bölümleri ──────────────────────────────────────────────────────────
 
 export const SYSTEM_SECTIONS: { value: SystemSection; label: string }[] = [
   { value: "ana-sayfa", label: "Ana Sayfa" },
   { value: "uyeler", label: "Üyeler" },
+  { value: "etkinlikler", label: "Etkinlikler" },
   { value: "yoklama", label: "Yoklama" },
   { value: "repertuvar", label: "Repertuvar" },
   { value: "secmeler", label: "Seçmeler & Kadro" },
@@ -75,30 +91,30 @@ const viewCreateEdit: PermSet = { can_view: true, can_create: true, can_edit: tr
 
 export const DEFAULT_PERMISSIONS: Record<UserRole, Record<SystemSection, PermSet>> = {
   admin: {
-    "ana-sayfa": all, uyeler: all, yoklama: all, repertuvar: all,
+    "ana-sayfa": all, uyeler: all, etkinlikler: all, yoklama: all, repertuvar: all,
     secmeler: all, yaratici: all, duyurular: all, formlar: all, ayarlar: all,
   },
   choir_leader: {
-    "ana-sayfa": all, uyeler: all, yoklama: all, repertuvar: all,
+    "ana-sayfa": all, uyeler: all, etkinlikler: all, yoklama: all, repertuvar: all,
     secmeler: all, yaratici: all, duyurular: all, formlar: all, ayarlar: viewCreateEdit,
   },
   section_leader: {
-    "ana-sayfa": viewOnly, uyeler: viewCreateEdit, yoklama: all,
+    "ana-sayfa": viewOnly, uyeler: viewCreateEdit, etkinlikler: all, yoklama: all,
     repertuvar: viewCreateEdit, secmeler: viewCreateEdit, yaratici: viewOnly,
     duyurular: viewCreate, formlar: viewCreate, ayarlar: viewOnly,
   },
   creative_team: {
-    "ana-sayfa": viewOnly, uyeler: viewOnly, yoklama: viewOnly,
+    "ana-sayfa": viewOnly, uyeler: viewOnly, etkinlikler: viewOnly, yoklama: viewOnly,
     repertuvar: all, secmeler: all, yaratici: all,
     duyurular: viewCreate, formlar: viewCreate, ayarlar: viewOnly,
   },
   member: {
-    "ana-sayfa": viewOnly, uyeler: viewOnly, yoklama: viewOnly,
+    "ana-sayfa": viewOnly, uyeler: viewOnly, etkinlikler: viewOnly, yoklama: viewOnly,
     repertuvar: viewOnly, secmeler: viewOnly, yaratici: none,
     duyurular: viewOnly, formlar: viewOnly, ayarlar: viewOnly,
   },
   observer: {
-    "ana-sayfa": viewOnly, uyeler: viewOnly, yoklama: none,
+    "ana-sayfa": viewOnly, uyeler: viewOnly, etkinlikler: viewOnly, yoklama: none,
     repertuvar: viewOnly, secmeler: viewOnly, yaratici: none,
     duyurular: viewOnly, formlar: none, ayarlar: viewOnly,
   },
