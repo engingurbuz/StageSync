@@ -57,7 +57,7 @@ export default function AuditionsPage() {
         <CreateAuditionDialog />
       </div>
 
-      <Tabs defaultValue="cast" className="space-y-4">
+      <Tabs defaultValue="auditions" className="space-y-4">
         <TabsList className="bg-muted/50 border border-border">
           <TabsTrigger value="auditions" className="data-[state=active]:bg-gold/10 data-[state=active]:text-gold">
             Açık Seçmeler

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,24 @@ export function CreateAuditionDialog() {
     song_ids: [] as string[],
   });
   const { songs } = useSongs();
+  const roots = useMemo(
+    () => songs.filter((s) => !s.parent_song_id).sort((a, b) => a.title.localeCompare(b.title, "tr")),
+    [songs]
+  );
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, typeof songs>();
+    for (const s of songs) {
+      if (s.parent_song_id) {
+        const list = map.get(s.parent_song_id) ?? [];
+        list.push(s);
+        map.set(s.parent_song_id, list);
+      }
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => (a.medley_position ?? 0) - (b.medley_position ?? 0));
+    }
+    return map;
+  }, [songs]);
 
   // Yetki kontrolü: seçmeler bölümünde oluşturma yetkisi
   const canCreate = checkPermission(profile, "secmeler", "create", permissions);
@@ -144,32 +162,72 @@ export function CreateAuditionDialog() {
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Music className="h-4 w-4 text-gold" />
-              Repertuvardan şarkılar (bu seçme hangi şarkılar için?)
+              Repertuvardan şarkılar (ana şarkılar; medley seçilirse parçalar da açılır)
             </Label>
-            <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/20 p-2 space-y-1">
-              {songs.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Repertuvarda şarkı yok.</p>
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-muted/20 p-2 space-y-0.5">
+              {roots.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Repertuvarda ana şarkı yok.</p>
               ) : (
-                songs.map((song) => (
-                  <label
-                    key={song.id}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={form.song_ids.includes(song.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setForm({ ...form, song_ids: [...form.song_ids, song.id] });
-                        } else {
-                          setForm({ ...form, song_ids: form.song_ids.filter((id) => id !== song.id) });
-                        }
-                      }}
-                      className="accent-gold"
-                    />
-                    <span className="truncate">{song.title}</span>
-                  </label>
-                ))
+                roots.map((song) => {
+                  const children = childrenByParent.get(song.id);
+                  const hasMedley = (children?.length ?? 0) > 0;
+                  return (
+                    <div key={song.id}>
+                      <label
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.song_ids.includes(song.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setForm({ ...form, song_ids: [...form.song_ids, song.id] });
+                            } else {
+                              setForm({
+                                ...form,
+                                song_ids: form.song_ids.filter((id) => id !== song.id),
+                              });
+                            }
+                          }}
+                          className="accent-gold"
+                        />
+                        <span className="truncate flex-1">{song.title}</span>
+                      </label>
+                      {hasMedley && (
+                        <div className="pl-6 pr-2 pb-1 space-y-0.5">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-1 mb-0.5">
+                            Medley parçaları (opsiyonel)
+                          </p>
+                          {children!.map((child) => (
+                            <label
+                              key={child.id}
+                              className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1 text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={form.song_ids.includes(child.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setForm({ ...form, song_ids: [...form.song_ids, child.id] });
+                                  } else {
+                                    setForm({
+                                      ...form,
+                                      song_ids: form.song_ids.filter((id) => id !== child.id),
+                                    });
+                                  }
+                                }}
+                                className="accent-gold"
+                              />
+                              <span className="truncate text-muted-foreground">
+                                {child.medley_position}. {child.title}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

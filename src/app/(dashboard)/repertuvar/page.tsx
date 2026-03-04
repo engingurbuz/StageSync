@@ -17,7 +17,7 @@ import { EditSongDialog } from "@/components/dialogs/edit-song-dialog";
 import { useSongs } from "@/hooks/use-songs";
 import type { Song } from "@/types/database";
 
-type RowItem = { song: Song; isMedleyPart: boolean };
+type RowItem = { song: Song; isMedleyPart: boolean; anaNo?: number };
 
 function buildOrderedRows(songs: Song[]): RowItem[] {
   const roots = songs
@@ -35,8 +35,10 @@ function buildOrderedRows(songs: Song[]): RowItem[] {
     list.sort((a, b) => (a.medley_position ?? 0) - (b.medley_position ?? 0));
   }
   const rows: RowItem[] = [];
+  let anaNo = 0;
   for (const root of roots) {
-    rows.push({ song: root, isMedleyPart: false });
+    anaNo += 1;
+    rows.push({ song: root, isMedleyPart: false, anaNo });
     const children = byParent.get(root.id);
     if (children?.length) {
       for (const child of children) {
@@ -53,6 +55,10 @@ export default function RepertoirePage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const orderedRows = useMemo(() => buildOrderedRows(songs), [songs]);
+  const anaSarkiCount = useMemo(
+    () => songs.filter((s) => !s.parent_song_id).length,
+    [songs]
+  );
 
   const handleSongClick = (song: Song) => {
     setSelectedSong(song);
@@ -88,12 +94,13 @@ export default function RepertoirePage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground w-12 text-center">No</TableHead>
                   <TableHead className="text-muted-foreground">Başlık</TableHead>
                   <TableHead className="text-muted-foreground text-right">Dosyalar</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orderedRows.map(({ song, isMedleyPart }) => (
+                {orderedRows.map(({ song, isMedleyPart, anaNo }) => (
                   <TableRow
                     key={song.id}
                     className={`border-border cursor-pointer ${
@@ -103,6 +110,9 @@ export default function RepertoirePage() {
                     }`}
                     onClick={() => handleSongClick(song)}
                   >
+                    <TableCell className="text-center text-muted-foreground w-12">
+                      {anaNo != null ? anaNo : "—"}
+                    </TableCell>
                     <TableCell className={`font-medium text-foreground ${isMedleyPart ? "pl-10" : ""}`}>
                       <div className="flex items-center gap-2">
                         <Music className={`h-4 w-4 shrink-0 ${isMedleyPart ? "text-gold/70" : "text-gold"}`} />
@@ -155,6 +165,10 @@ export default function RepertoirePage() {
                 ))}
               </TableBody>
             </Table>
+            <div className="px-4 py-2 border-t border-border text-sm text-muted-foreground">
+              Toplam {anaSarkiCount} ana şarkı
+              {songs.length !== anaSarkiCount && `, ${songs.length} kayıt (medley parçaları dahil)`}
+            </div>
           </CardContent>
         </Card>
       )}

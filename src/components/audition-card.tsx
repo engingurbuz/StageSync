@@ -12,13 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { useAuditionSignups, useAuditionSongs, useCastRoles } from "@/hooks/use-auditions";
+import { useAuditions, useAuditionSignups, useAuditionSongs, useCastRoles } from "@/hooks/use-auditions";
 import { checkPermission, hasRole } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { Audition } from "@/types/database";
 import type { SignupSelection } from "@/types/database";
-import { UserPlus, Loader2, Music, Users, Star } from "lucide-react";
+import { UserPlus, Loader2, Music, Users, Star, Calendar, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 const statusLabels: Record<string, string> = {
   open: "Açık",
@@ -43,6 +45,7 @@ export function AuditionCard({
   const { signups, isLoading: signupsLoading, addSignup, updateSignupSelection } = useAuditionSignups(audition.id);
   const { auditionSongs, isLoading: songsLoading } = useAuditionSongs(audition.id);
   const { addCastRole } = useCastRoles();
+  const { deleteAudition } = useAuditions();
   const [transferring, setTransferring] = useState(false);
 
   const canApply = hasRole(profile, "member") || profile?.role === "member" || (profile?.roles?.includes("member") ?? false);
@@ -101,13 +104,36 @@ export function AuditionCard({
     <Card className="border-border bg-card">
       <CardContent className="p-4 space-y-4">
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground">{audition.role_name}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{audition.description}</p>
+            {audition.audition_date && (
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                Seçme tarihi: {format(new Date(audition.audition_date), "d MMMM yyyy", { locale: tr })}
+              </p>
+            )}
           </div>
-          <Badge variant="outline" className="text-[10px] shrink-0">
-            {statusLabels[audition.status] || audition.status}
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant="outline" className="text-[10px]">
+              {statusLabels[audition.status] || audition.status}
+            </Badge>
+            {canManage && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (typeof window !== "undefined" && window.confirm("Bu seçmeyi silmek istediğinize emin misiniz? Başvurular da silinecektir.")) {
+                    deleteAudition.mutate(audition.id);
+                  }
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {auditionSongs.length > 0 && (
@@ -185,22 +211,17 @@ export function AuditionCard({
               </ul>
             )}
 
-            {canManage && signups.some((s) => s.selected_role_type === "lead" || s.selected_role_type === "understudy") && (
+            {canManage && signups.some((s) => s.selected_role_type === "lead" || s.selected_role_type === "understudy") && audition.production_id && (
               <Button
                 size="sm"
                 variant="outline"
                 className="w-full border-gold/30 hover:bg-gold/10"
                 onClick={handleTransferToCast}
-                disabled={transferring || !audition.production_id}
+                disabled={transferring}
               >
                 {transferring ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Kadroya aktar
               </Button>
-            )}
-            {canManage && audition.production_id == null && signups.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                Kadroya aktarmak için bu seçmeye bir prodüksiyon atanmalı (şimdilik prodüksiyonsuz seçmelerde kadroya aktarma devre dışı).
-              </p>
             )}
           </>
         )}

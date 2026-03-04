@@ -52,7 +52,19 @@ export function useAuditions() {
     },
   });
 
-  return { auditions, isLoading, error, addAudition };
+  const deleteAudition = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("auditions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditions"] });
+      queryClient.invalidateQueries({ queryKey: ["audition_songs"] });
+      queryClient.invalidateQueries({ queryKey: ["audition_signups"] });
+    },
+  });
+
+  return { auditions, isLoading, error, addAudition, deleteAudition };
 }
 
 export function useAuditionSongs(auditionId: string | null) {
