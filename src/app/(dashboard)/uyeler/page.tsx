@@ -133,7 +133,7 @@ export default function MembersPage() {
                   <TableRow className="border-border hover:bg-transparent">
                     <TableHead className="text-muted-foreground w-[250px]">Üye</TableHead>
                     <TableHead className="text-muted-foreground">Ses Tipi</TableHead>
-                    <TableHead className="text-muted-foreground">Rol</TableHead>
+                    <TableHead className="text-muted-foreground">Roller</TableHead>
                     <TableHead className="text-muted-foreground">Durum</TableHead>
                     <TableHead className="text-muted-foreground">Telefon</TableHead>
                     <TableHead className="text-muted-foreground">Üyelik Tarihi</TableHead>
@@ -179,9 +179,13 @@ export default function MembersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-velvet/30 text-velvet text-[10px]">
-                          {ROLE_LABELS[member.role] || member.role}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {(member.roles?.length ? member.roles : [member.role]).map((r) => (
+                            <Badge key={r} variant="outline" className="border-velvet/30 text-velvet text-[10px]">
+                              {ROLE_LABELS[r] || r}
+                            </Badge>
+                          ))}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge

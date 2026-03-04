@@ -7,12 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Bell, Shield, Loader2, Save, CheckCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { User, Bell, Shield, Loader2, Save, CheckCircle, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import type { Profile } from "@/types/database";
-import { VOICE_TYPES, ROLE_LABELS } from "@/lib/constants";
+import type { Profile, UserRole, SystemSection } from "@/types/database";
+import {
+  VOICE_TYPES,
+  ROLE_LABELS,
+  USER_ROLES,
+  SYSTEM_SECTIONS,
+  SECTION_LABELS,
+  DEFAULT_PERMISSIONS,
+  hasRole,
+} from "@/lib/constants";
 import {
   Select,
   SelectContent,
@@ -20,9 +30,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function SettingsPage() {
   const { user, profile, loading: authLoading } = useAuth();
+  const { effectivePermissions, updatePermission, isLoading: permsLoading } = usePermissions();
   const [saving, setSaving] = useState(false);
 
   const [fullName, setFullName] = useState("");
@@ -32,6 +51,22 @@ export default function SettingsPage() {
   const [bio, setBio] = useState("");
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
+
+  // Email change
+  const [newEmail, setNewEmail] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
+
+  // Password change
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  // Permission management
+  const [selectedPermRole, setSelectedPermRole] = useState<UserRole>("section_leader");
+  const isAdmin = hasRole(profile, "admin");
+
+  // Editable roles for permission management (exclude admin - always has full access)
+  const editableRoles = USER_ROLES.filter((r) => r.value !== "admin");
 
   // Email change
   const [newEmail, setNewEmail] = useState("");
@@ -127,6 +162,43 @@ export default function SettingsPage() {
     }
   };
 
+  const handleTogglePermission = async (
+    role: UserRole,
+    section: SystemSection,
+    action: "can_view" | "can_create" | "can_edit" | "can_delete"
+  ) => {
+    if (!user) return;
+    const currentPerms = effectivePermissions[role]?.[section] || DEFAULT_PERMISSIONS[role]?.[section] || {
+      can_view: false,
+      can_create: false,
+      can_edit: false,
+      can_delete: false,
+    };
+    const newValue = !currentPerms[action];
+
+    // If disabling view, also disable create/edit/delete
+    let updatedPerms = { ...currentPerms, [action]: newValue };
+    if (action === "can_view" && !newValue) {
+      updatedPerms = { ...updatedPerms, can_create: false, can_edit: false, can_delete: false };
+    }
+    // If enabling create/edit/delete, also enable view
+    if (action !== "can_view" && newValue) {
+      updatedPerms = { ...updatedPerms, can_view: true };
+    }
+
+    try {
+      await updatePermission.mutateAsync({
+        role,
+        section,
+        ...updatedPerms,
+        updated_by: user.id,
+      });
+      toast.success("Yetki güncellendi");
+    } catch {
+      toast.error("Yetki güncellenirken hata oluştu");
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -158,6 +230,12 @@ export default function SettingsPage() {
             <Shield className="mr-2 h-4 w-4" />
             Güvenlik
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="permissions" className="data-[state=active]:bg-gold/10 data-[state=active]:text-gold">
+              <Lock className="mr-2 h-4 w-4" />
+              Yetki Yönetimi
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="profile">
@@ -242,9 +320,9 @@ export default function SettingsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Rol</Label>
+                  <Label>Roller</Label>
                   <Input
-                    value={ROLE_LABELS[profile?.role || "member"] || profile?.role || "member"}
+                    value={(profile?.roles?.length ? profile.roles : [profile?.role || "member"]).map((r) => ROLE_LABELS[r] || r).join(", ")}
                     disabled
                     className="bg-muted/30 border-border text-muted-foreground"
                   />
@@ -371,6 +449,120 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Permission Management - Admin Only */}
+        {isAdmin && (
+          <TabsContent value="permissions">
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle className="text-foreground">Yetki Yönetimi</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Her rol için hangi bölümlerde hangi işlemlere izin verildiğini yapılandırın.
+                  Admin rolü her zaman tam yetkiye sahiptir.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Role selector */}
+                <div className="space-y-2">
+                  <Label>Rol Seçin</Label>
+                  <Select
+                    value={selectedPermRole}
+                    onValueChange={(val) => setSelectedPermRole(val as UserRole)}
+                  >
+                    <SelectTrigger className="bg-muted/50 border-border w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editableRoles.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>
+                          {r.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Permission table */}
+                {permsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-gold" />
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="text-foreground font-semibold w-[200px]">
+                            Bölüm
+                          </TableHead>
+                          <TableHead className="text-foreground font-semibold text-center w-[100px]">
+                            Görüntüleme
+                          </TableHead>
+                          <TableHead className="text-foreground font-semibold text-center w-[100px]">
+                            Oluşturma
+                          </TableHead>
+                          <TableHead className="text-foreground font-semibold text-center w-[100px]">
+                            Düzenleme
+                          </TableHead>
+                          <TableHead className="text-foreground font-semibold text-center w-[100px]">
+                            Silme
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {SYSTEM_SECTIONS.map((section) => {
+                          const perms = effectivePermissions[selectedPermRole]?.[section.value] ||
+                            DEFAULT_PERMISSIONS[selectedPermRole]?.[section.value] || {
+                              can_view: false,
+                              can_create: false,
+                              can_edit: false,
+                              can_delete: false,
+                            };
+                          return (
+                            <TableRow key={section.value} className="hover:bg-muted/20">
+                              <TableCell className="font-medium text-foreground">
+                                {section.label}
+                              </TableCell>
+                              {(["can_view", "can_create", "can_edit", "can_delete"] as const).map(
+                                (action) => (
+                                  <TableCell key={action} className="text-center">
+                                    <div className="flex justify-center">
+                                      <Checkbox
+                                        checked={perms[action]}
+                                        onCheckedChange={() =>
+                                          handleTogglePermission(
+                                            selectedPermRole,
+                                            section.value,
+                                            action
+                                          )
+                                        }
+                                        disabled={updatePermission.isPending}
+                                        className="data-[state=checked]:bg-gold data-[state=checked]:border-gold"
+                                      />
+                                    </div>
+                                  </TableCell>
+                                )
+                              )}
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                <div className="rounded-lg bg-muted/30 border border-border p-4">
+                  <p className="text-xs text-muted-foreground">
+                    <strong className="text-foreground">Not:</strong> Görüntüleme yetkisi
+                    kaldırıldığında, o bölüm için diğer tüm yetkiler de otomatik olarak kaldırılır.
+                    Oluşturma, düzenleme veya silme yetkisi verildiğinde görüntüleme yetkisi otomatik
+                    olarak etkinleştirilir.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

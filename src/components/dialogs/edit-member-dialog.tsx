@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -20,7 +21,7 @@ import { Loader2 } from "lucide-react";
 import { useMembers } from "@/hooks/use-members";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import type { Profile } from "@/types/database";
+import type { Profile, UserRole } from "@/types/database";
 import {
   VOICE_TYPES,
   USER_ROLES,
@@ -31,6 +32,7 @@ import {
   VOICE_TYPE_LABELS,
   ROLE_LABELS,
   STATUS_LABELS,
+  getUserRoles,
 } from "@/lib/constants";
 
 interface EditMemberDialogProps {
@@ -44,22 +46,34 @@ export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialo
   const { updateMember } = useMembers();
   
   const [voiceType, setVoiceType] = useState<string>("");
-  const [role, setRole] = useState<string>("");
+  const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([]);
   const [status, setStatus] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   // Yetki kontrolleri
-  const canEditVoice = canEditVoiceType(currentUser?.role);
-  const canEditUserRole = canEditRole(currentUser?.role);
-  const canEditStatus = canEditMemberStatus(currentUser?.role);
+  const currentUserRoles = getUserRoles(currentUser);
+  const canEditVoice = canEditVoiceType(currentUser?.role, currentUserRoles);
+  const canEditUserRole = canEditRole(currentUser?.role, currentUserRoles);
+  const canEditStatus = canEditMemberStatus(currentUser?.role, currentUserRoles);
 
   useEffect(() => {
     if (member) {
       setVoiceType(member.voice_type || "");
-      setRole(member.role || "member");
+      setSelectedRoles(member.roles?.length ? member.roles : [member.role || "member"]);
       setStatus(member.status || "active");
     }
   }, [member]);
+
+  const toggleRole = (role: UserRole) => {
+    setSelectedRoles((prev) => {
+      if (prev.includes(role)) {
+        // En az bir rol olmalı
+        if (prev.length <= 1) return prev;
+        return prev.filter((r) => r !== role);
+      }
+      return [...prev, role];
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +86,14 @@ export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialo
       if (canEditVoice && voiceType !== (member.voice_type || "")) {
         updates.voice_type = voiceType as Profile["voice_type"] || null;
       }
-      if (canEditUserRole && role !== member.role) {
-        updates.role = role as Profile["role"];
+      if (canEditUserRole) {
+        const memberRoles = member.roles?.length ? member.roles : [member.role];
+        const rolesChanged = selectedRoles.length !== memberRoles.length || 
+          selectedRoles.some((r) => !memberRoles.includes(r));
+        if (rolesChanged) {
+          updates.roles = selectedRoles;
+          updates.role = selectedRoles[0] as Profile["role"];
+        }
       }
       if (canEditStatus && status !== member.status) {
         updates.status = status as Profile["status"];
@@ -149,28 +169,33 @@ export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialo
 
             {/* Rol */}
             <div className="space-y-2">
-              <Label>Rol</Label>
+              <Label>Roller</Label>
               {canEditUserRole ? (
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger className="bg-muted/30 border-border">
-                    <SelectValue placeholder="Seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {USER_ROLES.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
+                <div className="space-y-2 rounded-md border border-border p-3 bg-muted/10">
+                  {USER_ROLES.map((r) => (
+                    <div key={r.value} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`role-${r.value}`}
+                        checked={selectedRoles.includes(r.value)}
+                        onCheckedChange={() => toggleRole(r.value)}
+                      />
+                      <label
+                        htmlFor={`role-${r.value}`}
+                        className="text-sm text-foreground cursor-pointer"
+                      >
                         {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </label>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="px-3 py-2 bg-muted/30 border border-border rounded-md text-sm text-muted-foreground">
-                  {ROLE_LABELS[member.role] || member.role}
+                  {(member.roles?.length ? member.roles : [member.role]).map((r) => ROLE_LABELS[r] || r).join(", ")}
                 </div>
               )}
               {!canEditUserRole && (
                 <p className="text-xs text-muted-foreground">
-                  Rolü sadece admin ve koro şefi değiştirebilir.
+                  Rolleri sadece admin ve yaratıcı ekip değiştirebilir.
                 </p>
               )}
             </div>

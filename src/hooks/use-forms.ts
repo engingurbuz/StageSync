@@ -53,11 +53,11 @@ export function useForms() {
   };
 
   // Fetch user's pending required forms
-  const usePendingForms = (userId: string | null, userRole: UserRole | undefined) => {
+  const usePendingForms = (userId: string | null, userRoles: UserRole[] | undefined) => {
     return useQuery({
-      queryKey: ["pending-forms", userId, userRole],
+      queryKey: ["pending-forms", userId, userRoles],
       queryFn: async () => {
-        if (!userId || !userRole) return [];
+        if (!userId || !userRoles || userRoles.length === 0) return [];
 
         // Get active, required forms
         const { data: requiredForms, error: formsError } = await supabase
@@ -80,18 +80,18 @@ export function useForms() {
         const pendingForms = (requiredForms || []).filter((form) => {
           if (completedFormIds.has(form.id)) return false;
 
-          // Check if form targets this user's role
+          // Check if form targets this user's role(s)
           if (form.target === "all") return true;
-          if (form.target === "member" && userRole === "member") return true;
-          if (form.target === "section_leader" && userRole === "section_leader") return true;
-          if (form.target === "specific" && form.target_roles?.includes(userRole)) return true;
+          if (form.target === "member" && userRoles.includes("member")) return true;
+          if (form.target === "section_leader" && userRoles.includes("section_leader")) return true;
+          if (form.target === "specific" && form.target_roles?.some((r: string) => userRoles.includes(r as UserRole))) return true;
 
           return false;
         });
 
         return pendingForms as Form[];
       },
-      enabled: !!userId && !!userRole,
+      enabled: !!userId && !!userRoles && userRoles.length > 0,
     });
   };
 

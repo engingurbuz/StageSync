@@ -14,13 +14,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, FileText, Calendar } from "lucide-react";
 import { useForms } from "@/hooks/use-forms";
 import { useAuth } from "@/hooks/use-auth";
+import { getUserRoles } from "@/lib/constants";
 import { FillFormDialog } from "./fill-form-dialog";
 import type { Form } from "@/types/database";
 
 export function PendingFormsCheck() {
   const { user, profile } = useAuth();
   const { usePendingForms } = useForms();
-  const { data: pendingForms = [], isLoading } = usePendingForms(user?.id || null, profile?.role);
+  const { data: pendingForms = [], isLoading } = usePendingForms(user?.id || null, getUserRoles(profile));
   
   const [isOpen, setIsOpen] = useState(false);
   const [selectedForm, setSelectedForm] = useState<Form | null>(null);

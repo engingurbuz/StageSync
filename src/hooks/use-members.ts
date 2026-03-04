@@ -31,7 +31,7 @@ export function useMembers() {
       full_name: string;
       voice_type?: string;
       phone?: string;
-      role?: string;
+      roles?: string[];
     }) => {
       // Admin invite: create auth user then profile updates via trigger
       const { data, error } = await supabase.auth.admin.createUser({
@@ -41,13 +41,15 @@ export function useMembers() {
       });
       if (error) {
         // Fallback: insert directly into profiles (for demo/dev)
+        const roles = member.roles && member.roles.length > 0 ? member.roles : ["member"];
         const { error: insertError } = await supabase.from("profiles").insert({
           id: crypto.randomUUID(),
           email: member.email,
           full_name: member.full_name,
           voice_type: member.voice_type || null,
           phone: member.phone || null,
-          role: member.role || "member",
+          role: roles[0] || "member",
+          roles: roles,
           status: "active",
         });
         if (insertError) throw insertError;
@@ -55,12 +57,14 @@ export function useMembers() {
       }
       // Update the profile with extra info
       if (data.user) {
+        const roles = member.roles && member.roles.length > 0 ? member.roles : ["member"];
         await supabase
           .from("profiles")
           .update({
             voice_type: member.voice_type || null,
             phone: member.phone || null,
-            role: (member.role as Profile["role"]) || "member",
+            role: (roles[0] as Profile["role"]) || "member",
+            roles: roles,
           })
           .eq("id", data.user.id);
       }

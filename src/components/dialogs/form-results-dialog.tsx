@@ -37,11 +37,14 @@ export function FormResultsDialog({ form, open, onOpenChange }: FormResultsDialo
     // Determine target users based on form target
     let targetUsers = members;
     if (form.target === "member") {
-      targetUsers = members.filter((m) => m.role === "member");
+      targetUsers = members.filter((m) => (m.roles?.length ? m.roles : [m.role]).includes("member"));
     } else if (form.target === "section_leader") {
-      targetUsers = members.filter((m) => m.role === "section_leader");
+      targetUsers = members.filter((m) => (m.roles?.length ? m.roles : [m.role]).includes("section_leader"));
     } else if (form.target === "specific" && form.target_roles?.length) {
-      targetUsers = members.filter((m) => form.target_roles.includes(m.role));
+      targetUsers = members.filter((m) => {
+        const userRoles = m.roles?.length ? m.roles : [m.role];
+        return form.target_roles.some((r: string) => userRoles.includes(r as typeof m.role));
+      });
     }
 
     const totalTarget = targetUsers.length;

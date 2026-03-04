@@ -99,6 +99,7 @@ CREATE TABLE profiles (
   avatar_url     TEXT,
   phone          TEXT,
   role           user_role NOT NULL DEFAULT 'member',
+  roles          user_role[] NOT NULL DEFAULT ARRAY['member']::user_role[],
   voice_type     voice_type,
   status         member_status NOT NULL DEFAULT 'pending',
   bio            TEXT,
@@ -141,6 +142,36 @@ CREATE POLICY "Admins can insert profiles"
     OR EXISTS (
       SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
     )
+  );
+
+-- ──────────────────────────────────────────────────────────────────────────────
+-- 2b. ROLE PERMISSIONS (configurable per-role per-section CRUD permissions)
+-- ──────────────────────────────────────────────────────────────────────────────
+CREATE TABLE role_permissions (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  role        user_role NOT NULL,
+  section     TEXT NOT NULL,
+  can_view    BOOLEAN NOT NULL DEFAULT FALSE,
+  can_create  BOOLEAN NOT NULL DEFAULT FALSE,
+  can_edit    BOOLEAN NOT NULL DEFAULT FALSE,
+  can_delete  BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_by  UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  UNIQUE(role, section)
+);
+
+ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can view role_permissions"
+  ON role_permissions FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Admins can manage role_permissions"
+  ON role_permissions FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
 -- ──────────────────────────────────────────────────────────────────────────────

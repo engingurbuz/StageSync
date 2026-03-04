@@ -23,11 +23,14 @@ import {
 import { Plus, Loader2, Calendar } from "lucide-react";
 import { useAuditions } from "@/hooks/use-auditions";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { checkPermission } from "@/lib/constants";
 import { toast } from "sonner";
 
 export function CreateAuditionDialog() {
   const [open, setOpen] = useState(false);
   const { profile } = useAuth();
+  const { permissions } = usePermissions();
   const { addAudition } = useAuditions();
   const [form, setForm] = useState({
     role_name: "",
@@ -36,8 +39,8 @@ export function CreateAuditionDialog() {
     deadline: "",
   });
 
-  // Sadece admin ve koro şefi seçme oluşturabilir
-  const canCreate = profile?.role === "admin" || profile?.role === "creative_team";
+  // Yetki kontrolü: seçmeler bölümünde oluşturma yetkisi
+  const canCreate = checkPermission(profile, "secmeler", "create", permissions);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

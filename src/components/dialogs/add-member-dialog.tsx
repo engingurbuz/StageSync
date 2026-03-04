@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import { Users, Loader2 } from "lucide-react";
 import { useMembers } from "@/hooks/use-members";
 import { toast } from "sonner";
 import { VOICE_TYPES, USER_ROLES } from "@/lib/constants";
+import type { UserRole } from "@/types/database";
 
 export function AddMemberDialog() {
   const [open, setOpen] = useState(false);
@@ -30,9 +32,20 @@ export function AddMemberDialog() {
     email: "",
     phone: "",
     voice_type: "",
-    role: "member",
+    roles: ["member"] as UserRole[],
   });
   const { addMember } = useMembers();
+
+  const toggleRole = (role: UserRole) => {
+    setForm((prev) => {
+      const roles = prev.roles.includes(role)
+        ? prev.roles.filter((r) => r !== role)
+        : [...prev.roles, role];
+      // En az bir rol olmalı
+      if (roles.length === 0) return prev;
+      return { ...prev, roles };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +59,11 @@ export function AddMemberDialog() {
         email: form.email,
         phone: form.phone || undefined,
         voice_type: form.voice_type || undefined,
-        role: form.role,
+        roles: form.roles,
       });
       toast.success("Üye başarıyla eklendi");
       setOpen(false);
-      setForm({ full_name: "", email: "", phone: "", voice_type: "", role: "member" });
+      setForm({ full_name: "", email: "", phone: "", voice_type: "", roles: ["member"] });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Üye eklenirken hata oluştu";
       toast.error(message);
@@ -121,22 +134,24 @@ export function AddMemberDialog() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Rol</Label>
-              <Select
-                value={form.role}
-                onValueChange={(v) => setForm({ ...form, role: v })}
-              >
-                <SelectTrigger className="bg-muted/30 border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  {USER_ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
+              <Label>Roller</Label>
+              <div className="space-y-2 rounded-md border border-border p-3 bg-muted/10">
+                {USER_ROLES.map((r) => (
+                  <div key={r.value} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`add-role-${r.value}`}
+                      checked={form.roles.includes(r.value)}
+                      onCheckedChange={() => toggleRole(r.value)}
+                    />
+                    <label
+                      htmlFor={`add-role-${r.value}`}
+                      className="text-sm text-foreground cursor-pointer"
+                    >
                       {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           <Button

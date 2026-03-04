@@ -32,6 +32,9 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { checkPermission, getUserRoles, ROLE_LABELS } from "@/lib/constants";
+import type { SystemSection } from "@/types/database";
 
 // ── Navigation Items ────────────────────────────────────────────────────────────
 const navItems = [
@@ -39,49 +42,49 @@ const navItems = [
     title: "Ana Sayfa",
     href: "/ana-sayfa",
     icon: LayoutDashboard,
-    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
+    section: "ana-sayfa" as SystemSection,
   },
   {
     title: "Üyeler",
     href: "/uyeler",
     icon: Users,
-    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
+    section: "uyeler" as SystemSection,
   },
   {
     title: "Yoklama",
     href: "/yoklama",
     icon: CalendarCheck,
-    roles: ["admin", "section_leader"],
+    section: "yoklama" as SystemSection,
   },
   {
     title: "Repertuvar",
     href: "/repertuvar",
     icon: Music,
-    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
+    section: "repertuvar" as SystemSection,
   },
   {
     title: "Seçmeler & Kadro",
     href: "/secmeler",
     icon: Theater,
-    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
+    section: "secmeler" as SystemSection,
   },
   {
     title: "Yaratıcı Pano",
     href: "/yaratici",
     icon: Palette,
-    roles: ["admin", "creative_team"],
+    section: "yaratici" as SystemSection,
   },
   {
     title: "Duyurular",
     href: "/duyurular",
     icon: Megaphone,
-    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
+    section: "duyurular" as SystemSection,
   },
   {
     title: "Formlar",
     href: "/formlar",
     icon: ClipboardList,
-    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
+    section: "formlar" as SystemSection,
   },
 ];
 
@@ -120,7 +123,7 @@ function NavLink({
   collapsed,
   onClick,
 }: {
-  item: (typeof navItems)[0];
+  item: (typeof navItems)[0] & { section?: SystemSection };
   collapsed: boolean;
   onClick?: () => void;
 }) {
@@ -167,18 +170,19 @@ function NavLink({
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { profile, signOut } = useAuth();
+  const { permissions } = usePermissions();
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : "??";
 
-  const roleLabels: Record<string, string> = {
-    admin: "Yönetici",
-    section_leader: "Bölüm Lideri",
-    creative_team: "Yaratıcı Ekip",
-    member: "Korist",
-    observer: "Gözlemci",
-  };
+  const userRoles = getUserRoles(profile);
+  const roleDisplay = userRoles.map((r) => ROLE_LABELS[r] || r).join(", ");
+
+  // Filter nav items based on permissions
+  const visibleNavItems = navItems.filter((item) =>
+    checkPermission(profile, item.section, "view", permissions)
+  );
 
   return (
     <aside
@@ -195,7 +199,7 @@ export function Sidebar() {
       {/* Main nav */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink key={item.href} item={item} collapsed={collapsed} />
           ))}
         </nav>
@@ -209,7 +213,7 @@ export function Sidebar() {
         {bottomNavItems.map((item) => (
           <NavLink
             key={item.href}
-            item={{ ...item, roles: [] }}
+            item={{ ...item, section: "ayarlar" as SystemSection }}
             collapsed={collapsed}
           />
         ))}
@@ -233,7 +237,7 @@ export function Sidebar() {
                 {profile?.full_name || "Yükleniyor..."}
               </span>
               <span className="truncate text-[10px] text-muted-foreground">
-                {roleLabels[profile?.role || "member"] || profile?.role}
+                {roleDisplay}
               </span>
             </div>
           )}
@@ -273,6 +277,13 @@ export function Sidebar() {
 // ── Mobile Sidebar (Sheet) ──────────────────────────────────────────────────────
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
+  const { profile } = useAuth();
+  const { permissions } = usePermissions();
+
+  // Filter nav items based on permissions
+  const visibleNavItems = navItems.filter((item) =>
+    checkPermission(profile, item.section, "view", permissions)
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -294,7 +305,7 @@ export function MobileSidebar() {
         <Separator className="bg-sidebar-border" />
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="flex flex-col gap-1">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavLink
                 key={item.href}
                 item={item}
@@ -307,7 +318,7 @@ export function MobileSidebar() {
           {bottomNavItems.map((item) => (
             <NavLink
               key={item.href}
-              item={{ ...item, roles: [] }}
+              item={{ ...item, section: "ayarlar" as SystemSection }}
               collapsed={false}
               onClick={() => setOpen(false)}
             />

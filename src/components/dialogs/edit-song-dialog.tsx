@@ -15,6 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, Music2, Trash2 } from "lucide-react";
 import { useSongs } from "@/hooks/use-songs";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { checkPermission } from "@/lib/constants";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { Song } from "@/types/database";
@@ -27,6 +29,7 @@ interface EditSongDialogProps {
 
 export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps) {
   const { user, profile } = useAuth();
+  const { permissions } = usePermissions();
   const [form, setForm] = useState({
     title: "",
     notes: "",
@@ -39,8 +42,8 @@ export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps
   const [deleting, setDeleting] = useState(false);
   const { updateSong, deleteSong } = useSongs();
 
-  // Sadece admin ve koro şefi şarkı düzenleyebilir
-  const canEdit = profile?.role === "admin" || profile?.role === "creative_team";
+  // Yetki kontrolü: repertuvar bölümünde düzenleme yetkisi
+  const canEdit = checkPermission(profile, "repertuvar", "edit", permissions);
 
   useEffect(() => {
     if (song) {

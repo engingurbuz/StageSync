@@ -16,12 +16,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Loader2, Upload, FileText, Music2 } from "lucide-react";
 import { useSongs } from "@/hooks/use-songs";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { checkPermission } from "@/lib/constants";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
 export function AddSongDialog() {
   const [open, setOpen] = useState(false);
   const { user, profile } = useAuth();
+  const { permissions } = usePermissions();
   const [form, setForm] = useState({
     title: "",
     notes: "",
@@ -31,8 +34,8 @@ export function AddSongDialog() {
   const [uploading, setUploading] = useState(false);
   const { addSong } = useSongs();
 
-  // Sadece admin ve koro şefi şarkı ekleyebilir
-  const canAddSong = profile?.role === "admin" || profile?.role === "creative_team";
+  // Yetki kontrolü: repertuvar bölümünde oluşturma yetkisi
+  const canAddSong = checkPermission(profile, "repertuvar", "create", permissions);
 
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
     const supabase = createClient();

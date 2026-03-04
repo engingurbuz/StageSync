@@ -16,6 +16,33 @@ export type FormStatus = "draft" | "active" | "closed";
 export type QuestionType = "text" | "textarea" | "select" | "multiselect" | "checkbox" | "radio" | "date" | "number";
 export type FormTarget = "all" | "member" | "section_leader" | "specific";
 
+// ── Permission types ───────────────────────────────────────────────────────────
+
+export type SystemSection =
+  | "ana-sayfa"
+  | "uyeler"
+  | "yoklama"
+  | "repertuvar"
+  | "secmeler"
+  | "yaratici"
+  | "duyurular"
+  | "formlar"
+  | "ayarlar";
+
+export type PermissionAction = "view" | "create" | "edit" | "delete";
+
+export interface RolePermission {
+  id: string;
+  role: UserRole;
+  section: SystemSection;
+  can_view: boolean;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+  updated_at: string;
+  updated_by: string | null;
+}
+
 // ── Row types ──────────────────────────────────────────────────────────────────
 
 export interface Profile {
@@ -26,6 +53,7 @@ export interface Profile {
   avatar_url: string | null;
   phone: string | null;
   role: UserRole;
+  roles: UserRole[];
   voice_type: VoiceType | null;
   status: MemberStatus;
   bio: string | null;
