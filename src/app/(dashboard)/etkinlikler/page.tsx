@@ -32,8 +32,8 @@ import {
   isSameDay,
   isWithinInterval,
   addDays,
-  tr,
 } from "date-fns";
+import { tr } from "date-fns/locale";
 import type { Event } from "@/types/database";
 
 const eventTypeColors: Record<string, string> = {
