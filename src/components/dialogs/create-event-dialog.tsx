@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Loader2, MapPin } from "lucide-react";
+import { MapPickerDialog } from "@/components/dialogs/map-picker-dialog";
 import { useEvents } from "@/hooks/use-events";
 import { useAuth } from "@/hooks/use-auth";
 import { EVENT_TYPES } from "@/lib/constants";
@@ -28,6 +29,7 @@ import type { EventType } from "@/types/database";
 
 export function CreateEventDialog() {
   const [open, setOpen] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const { user } = useAuth();
   const [form, setForm] = useState({
     title: "",
@@ -45,7 +47,7 @@ export function CreateEventDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.start_time || !form.end_time) {
-      toast.error("Başlık, başlangıç ve bitiş zamanı gereklidir");
+      toast.error("BaÅŸlÄ±k, baÅŸlangÄ±Ã§ ve bitiÅŸ zamanÄ± gereklidir");
       return;
     }
     try {
@@ -64,7 +66,7 @@ export function CreateEventDialog() {
         production_id: null,
         created_by: user?.id || "",
       });
-      toast.success("Etkinlik başarıyla oluşturuldu");
+      toast.success("Etkinlik baÅŸarÄ±yla oluÅŸturuldu");
       setOpen(false);
       setForm({
         title: "",
@@ -78,7 +80,7 @@ export function CreateEventDialog() {
         is_mandatory: true,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Etkinlik oluşturulurken hata oluştu";
+      const message = err instanceof Error ? err.message : "Etkinlik oluÅŸturulurken hata oluÅŸtu";
       toast.error(message);
     }
   };
@@ -88,27 +90,27 @@ export function CreateEventDialog() {
       <DialogTrigger asChild>
         <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
           <Plus className="mr-2 h-4 w-4" />
-          Etkinlik Oluştur
+          Etkinlik OluÅŸtur
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card border-border sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Yeni Etkinlik Oluştur</DialogTitle>
+          <DialogTitle className="text-foreground">Yeni Etkinlik OluÅŸtur</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="event-title">Etkinlik Adı *</Label>
+            <Label htmlFor="event-title">Etkinlik AdÄ± *</Label>
             <Input
               id="event-title"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="Örn: Tam Kadro Prova"
+              placeholder="Ã–rn: Tam Kadro Prova"
               className="bg-muted/30 border-border"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Etkinlik Türü</Label>
+              <Label>Etkinlik TÃ¼rÃ¼</Label>
               <Select
                 value={form.event_type}
                 onValueChange={(v) => setForm({ ...form, event_type: v as EventType })}
@@ -126,7 +128,7 @@ export function CreateEventDialog() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="location">Konum (adres)</Label>
+              <Label htmlFor="location">Etkinlik yeri</Label>
               <Input
                 id="location"
                 value={form.location}
@@ -134,41 +136,32 @@ export function CreateEventDialog() {
                 placeholder="Ana salon veya adres"
                 className="bg-muted/30 border-border"
               />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-1"
+                onClick={() => setMapPickerOpen(true)}
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                Haritadan konum seÃ§
+              </Button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="location_lat" className="flex items-center gap-1 text-muted-foreground">
-                <MapPin className="h-3 w-3" /> Enlem (opsiyonel)
-              </Label>
-              <Input
-                id="location_lat"
-                type="number"
-                step="any"
-                value={form.location_lat}
-                onChange={(e) => setForm({ ...form, location_lat: e.target.value })}
-                placeholder="41.0082"
-                className="bg-muted/30 border-border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location_lng" className="flex items-center gap-1 text-muted-foreground">
-                <MapPin className="h-3 w-3" /> Boylam (opsiyonel)
-              </Label>
-              <Input
-                id="location_lng"
-                type="number"
-                step="any"
-                value={form.location_lng}
-                onChange={(e) => setForm({ ...form, location_lng: e.target.value })}
-                placeholder="28.9784"
-                className="bg-muted/30 border-border"
-              />
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Haritadan konum seçmek için enlem/boylam girebilir veya Google Maps’te arayıp koordinatları kopyalayabilirsiniz.
-          </p>
+          <MapPickerDialog
+            open={mapPickerOpen}
+            onOpenChange={setMapPickerOpen}
+            initialLat={form.location_lat !== "" ? Number(form.location_lat) : null}
+            initialLng={form.location_lng !== "" ? Number(form.location_lng) : null}
+            onSelect={(lat, lng, address) => {
+              setForm((prev) => ({
+                ...prev,
+                location_lat: lat,
+                location_lng: lng,
+                location: address ?? prev.location,
+              }));
+            }}
+          />
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="start">Başlangıç *</Label>
@@ -218,7 +211,7 @@ export function CreateEventDialog() {
             disabled={addEvent.isPending}
           >
             {addEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Etkinlik Oluştur
+            Etkinlik OluÅŸtur
           </Button>
         </form>
       </DialogContent>
