@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +10,17 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Calendar, FileText, ExternalLink } from "lucide-react";
+import { MapPin, Clock, Calendar, FileText, Map, MapOff } from "lucide-react";
 import { getLocationDisplayText } from "@/lib/utils";
 import { EVENT_TYPE_LABELS } from "@/lib/constants";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import type { Event } from "@/types/database";
+
+const EventLocationMap = dynamic(
+  () => import("@/components/event-location-map").then((m) => ({ default: m.EventLocationMap })),
+  { ssr: false, loading: () => <div className="h-[220px] rounded-lg bg-muted/30 animate-pulse flex items-center justify-center text-muted-foreground text-sm">Harita yükleniyor...</div> }
+);
 
 const eventTypeColors: Record<string, string> = {
   rehearsal: "bg-gold/10 text-gold border-gold/30",
@@ -44,26 +51,28 @@ export function EventDetailDialog({
     event.location_lng != null &&
     !Number.isNaN(event.location_lat) &&
     !Number.isNaN(event.location_lng);
-  const mapsUrl =
-    hasCoords
-      ? `https://www.google.com/maps?q=${event.location_lat},${event.location_lng}`
-      : null;
+  const [showMap, setShowMap] = useState(false);
+
+  useEffect(() => {
+    if (!open) setShowMap(false);
+  }, [open]);
+  useEffect(() => {
+    setShowMap(false);
+  }, [event?.id]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-start justify-between gap-3">
-            <DialogTitle className="text-foreground text-lg pr-2">
-              {event.title}
-            </DialogTitle>
-            <Badge
-              variant="outline"
-              className={`shrink-0 ${eventTypeColors[event.event_type] || ""}`}
-            >
-              {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
-            </Badge>
-          </div>
+      <DialogContent className="bg-card border-border sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pr-8">
+          <DialogTitle className="text-foreground text-lg">
+            {event.title}
+          </DialogTitle>
+          <Badge
+            variant="outline"
+            className={`w-fit ${eventTypeColors[event.event_type] || ""}`}
+          >
+            {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
+          </Badge>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -82,32 +91,41 @@ export function EventDetailDialog({
             </span>
           </div>
           {(locationText || hasCoords) && (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-start gap-3 text-sm">
                 <MapPin className="h-4 w-4 text-gold/80 shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
                   <p className="text-foreground">
                     {locationText ?? "Konum girildi"}
                   </p>
-                  {mapsUrl && (
+                  {hasCoords && (
                     <Button
-                      variant="link"
+                      variant="ghost"
                       size="sm"
-                      className="h-auto p-0 mt-1 text-gold hover:text-gold/80"
-                      asChild
+                      className="h-auto p-0 mt-1.5 text-gold hover:text-gold/80 hover:bg-gold/10"
+                      onClick={() => setShowMap((v) => !v)}
                     >
-                      <a
-                        href={mapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5 mr-1 inline" />
-                        Haritada aç
-                      </a>
+                      {showMap ? (
+                        <>
+                          <MapOff className="h-3.5 w-3.5 mr-1.5 inline" />
+                          Haritayı kapat
+                        </>
+                      ) : (
+                        <>
+                          <Map className="h-3.5 w-3.5 mr-1.5 inline" />
+                          Haritada aç
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>
               </div>
+              {showMap && hasCoords && event.location_lat != null && event.location_lng != null && (
+                <EventLocationMap
+                  lat={event.location_lat}
+                  lng={event.location_lng}
+                />
+              )}
             </div>
           )}
           {event.description && event.description.trim() && (
