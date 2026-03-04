@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { checkPermission } from "@/lib/constants";
 import { EVENT_TYPE_LABELS } from "@/lib/constants";
+import { getLocationDisplayText } from "@/lib/utils";
 import { AttendanceEntryDialog } from "@/components/dialogs/attendance-entry-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -65,8 +66,8 @@ export default function AttendancePage() {
       ) : (
         <>
           {/* Yaklaşan Etkinlikler */}
-          <Card className="border-border bg-card">
-            <CardHeader>
+          <Card className="border-border bg-card shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent border-b border-border/50">
               <CardTitle className="flex items-center gap-2 text-foreground">
                 <CalendarCheck className="h-5 w-5 text-gold" />
                 Yaklaşan Etkinlikler
@@ -84,52 +85,58 @@ export default function AttendancePage() {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {upcomingEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-center gap-4 rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
-                    >
-                      <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-gold/10 text-gold">
-                        <span className="text-xs font-medium uppercase">
-                          {format(new Date(event.start_time), "MMM", { locale: tr })}
-                        </span>
-                        <span className="text-lg font-bold leading-none">
-                          {format(new Date(event.start_time), "dd")}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{event.title}</p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(event.start_time), "HH:mm")} – {format(new Date(event.end_time), "HH:mm")}
-                            </span>
-                          </div>
-                          {event.location && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">{event.location}</span>
-                            </div>
-                          )}
+                  {upcomingEvents.map((event) => {
+                    const locationText = getLocationDisplayText(event.location);
+                    const hasLocation = locationText || (event.location_lat != null && event.location_lng != null);
+                    return (
+                      <div
+                        key={event.id}
+                        className="group flex items-center gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-gold/30 hover:shadow-md"
+                      >
+                        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-gold/20 text-gold shadow-inner">
+                          <span className="text-xs font-semibold uppercase tracking-wider">
+                            {format(new Date(event.start_time), "MMM", { locale: tr })}
+                          </span>
+                          <span className="text-xl font-bold leading-none mt-0.5">
+                            {format(new Date(event.start_time), "dd")}
+                          </span>
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{event.title}</p>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5">
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5 text-gold/80" />
+                              <span className="text-xs">
+                                {format(new Date(event.start_time), "HH:mm")} – {format(new Date(event.end_time), "HH:mm")}
+                              </span>
+                            </div>
+                            {hasLocation && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground" title={locationText || undefined}>
+                                <MapPin className="h-3.5 w-3.5 text-gold/80" />
+                                <span className="text-xs truncate max-w-[220px]">
+                                  {locationText ?? "Konum girildi"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={`shrink-0 ${eventTypeColors[event.event_type] || ""} font-medium`}>
+                          {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
+                        </Badge>
+                        {canEditAttendance && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 rounded-lg border-gold/30 hover:bg-gold/10 hover:border-gold/50 hover:text-gold transition-colors"
+                            onClick={() => openAttendanceFor(event)}
+                          >
+                            <ClipboardCheck className="h-4 w-4 mr-1" />
+                            Yoklama girişi
+                          </Button>
+                        )}
                       </div>
-                      <Badge variant="outline" className={eventTypeColors[event.event_type] || ""}>
-                        {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
-                      </Badge>
-                      {canEditAttendance && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="shrink-0"
-                          onClick={() => openAttendanceFor(event)}
-                        >
-                          <ClipboardCheck className="h-4 w-4 mr-1" />
-                          Yoklama girişi
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

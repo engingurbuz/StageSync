@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { checkPermission } from "@/lib/constants";
 import { EVENT_TYPE_LABELS } from "@/lib/constants";
+import { getLocationDisplayText } from "@/lib/utils";
 import {
   format,
   addMonths,
@@ -68,67 +69,74 @@ function CalendarView({ events }: { events: Event[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <Button
           variant="outline"
           size="icon"
+          className="rounded-xl border-gold/30 hover:bg-gold/10 hover:border-gold/50 hover:text-gold transition-colors"
           onClick={() => setMonth((m) => subMonths(m, 1))}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h3 className="text-lg font-semibold text-foreground capitalize">
+        <h3 className="text-lg font-semibold text-foreground capitalize tabular-nums">
           {format(month, "MMMM yyyy", { locale: tr })}
         </h3>
         <Button
           variant="outline"
           size="icon"
+          className="rounded-xl border-gold/30 hover:bg-gold/10 hover:border-gold/50 hover:text-gold transition-colors"
           onClick={() => setMonth((m) => addMonths(m, 1))}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <div className="rounded-lg border border-border overflow-hidden">
-        <div className="grid grid-cols-7 bg-muted/50 border-b border-border">
+      <div className="rounded-xl border border-border overflow-hidden shadow-sm bg-card">
+        <div className="grid grid-cols-7 bg-gradient-to-r from-muted/40 to-muted/20 border-b border-border">
           {weekDays.map((w) => (
             <div
               key={w}
-              className="p-2 text-center text-xs font-medium text-muted-foreground"
+              className="p-2.5 text-center text-xs font-semibold text-muted-foreground"
             >
               {w}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 bg-card">
+        <div className="grid grid-cols-7">
           {days.map((day) => {
             const dayEvents = eventsOnDay(day);
             const isCurrentMonth = isSameMonth(day, month);
+            const isToday = isSameDay(day, new Date());
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[80px] border-b border-r border-border p-1 ${
-                  !isCurrentMonth ? "bg-muted/20" : ""
-                }`}
+                className={`min-h-[88px] border-b border-r border-border/60 p-2 transition-colors hover:bg-muted/20 ${
+                  !isCurrentMonth ? "bg-muted/10" : ""
+                } ${isToday ? "bg-amber-500/5 ring-inset" : ""}`}
               >
                 <span
-                  className={`text-xs font-medium ${
-                    isCurrentMonth ? "text-foreground" : "text-muted-foreground"
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
+                    isCurrentMonth
+                      ? isToday
+                        ? "bg-gold text-gold-foreground font-bold"
+                        : "text-foreground"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {format(day, "d")}
                 </span>
-                <div className="mt-1 space-y-0.5">
+                <div className="mt-1.5 space-y-1">
                   {dayEvents.slice(0, 2).map((e) => (
                     <div
                       key={e.id}
-                      className="truncate rounded px-1 py-0.5 text-[10px] border border-transparent bg-gold/10 text-gold"
+                      className="truncate rounded-lg px-2 py-1 text-[11px] font-medium bg-gradient-to-r from-amber-500/15 to-gold/10 text-gold border border-gold/20 shadow-sm"
                       title={e.title}
                     >
                       {e.title}
                     </div>
                   ))}
                   {dayEvents.length > 2 && (
-                    <span className="text-[10px] text-muted-foreground">
-                      +{dayEvents.length - 2}
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      +{dayEvents.length - 2} etkinlik
                     </span>
                   )}
                 </div>
@@ -167,20 +175,20 @@ export default function EventsPage() {
         </div>
       ) : (
         <Tabs defaultValue="list" className="w-full">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="list" className="gap-2">
+          <TabsList className="bg-muted/50 rounded-xl p-1">
+            <TabsTrigger value="list" className="gap-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:shadow-sm">
               <List className="h-4 w-4" />
               Liste
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-2">
+            <TabsTrigger value="calendar" className="gap-2 rounded-lg data-[state=active]:bg-gold/15 data-[state=active]:text-gold data-[state=active]:shadow-sm">
               <Calendar className="h-4 w-4" />
               Takvim
             </TabsTrigger>
           </TabsList>
           <TabsContent value="list" className="mt-6 space-y-6">
-            <Card className="border-border bg-card">
-              <CardHeader>
-                <CardTitle className="text-foreground">
+            <Card className="border-border bg-card shadow-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent border-b border-border/50">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   Yaklaşan Etkinlikler
                   {upcomingEvents.length > 0 && (
                     <Badge variant="secondary" className="ml-2 bg-gold/10 text-gold text-[10px]">
@@ -196,49 +204,53 @@ export default function EventsPage() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {upcomingEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        className="flex items-center gap-4 rounded-lg border border-border bg-muted/30 p-3"
-                      >
-                        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-gold/10 text-gold">
-                          <span className="text-xs font-medium uppercase">
-                            {format(new Date(event.start_time), "MMM", { locale: tr })}
-                          </span>
-                          <span className="text-lg font-bold leading-none">
-                            {format(new Date(event.start_time), "dd")}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">
-                            {event.title}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                {format(new Date(event.start_time), "HH:mm")} –{" "}
-                                {format(new Date(event.end_time), "HH:mm")}
-                              </span>
-                            </div>
-                            {event.location && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                  {event.location}
+                    {upcomingEvents.map((event) => {
+                      const locationText = getLocationDisplayText(event.location);
+                      const hasLocation = locationText || (event.location_lat != null && event.location_lng != null);
+                      return (
+                        <div
+                          key={event.id}
+                          className="group flex items-center gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-gold/30 hover:shadow-md"
+                        >
+                          <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-gold/20 text-gold shadow-inner">
+                            <span className="text-xs font-semibold uppercase tracking-wider">
+                              {format(new Date(event.start_time), "MMM", { locale: tr })}
+                            </span>
+                            <span className="text-xl font-bold leading-none mt-0.5">
+                              {format(new Date(event.start_time), "dd")}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">
+                              {event.title}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5">
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Clock className="h-3.5 w-3.5 text-gold/80" />
+                                <span className="text-xs">
+                                  {format(new Date(event.start_time), "HH:mm")} –{" "}
+                                  {format(new Date(event.end_time), "HH:mm")}
                                 </span>
                               </div>
-                            )}
+                              {hasLocation && (
+                                <div className="flex items-center gap-1.5 text-muted-foreground" title={locationText || undefined}>
+                                  <MapPin className="h-3.5 w-3.5 text-gold/80" />
+                                  <span className="text-xs truncate max-w-[220px]">
+                                    {locationText ?? "Konum girildi"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          <Badge
+                            variant="outline"
+                            className={`shrink-0 ${eventTypeColors[event.event_type] || ""} font-medium`}
+                          >
+                            {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
+                          </Badge>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={eventTypeColors[event.event_type] || ""}
-                        >
-                          {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
-                        </Badge>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -258,7 +270,7 @@ export default function EventsPage() {
                     {pastEvents.slice(0, 10).map((event) => (
                       <div
                         key={event.id}
-                        className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-2 text-sm"
+                        className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-sm transition-colors hover:bg-muted/30"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-muted-foreground">
@@ -287,11 +299,11 @@ export default function EventsPage() {
             )}
           </TabsContent>
           <TabsContent value="calendar" className="mt-6">
-            <Card className="border-border bg-card">
-              <CardHeader>
+            <Card className="border-border bg-card shadow-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent border-b border-border/50">
                 <CardTitle className="text-foreground">Takvim görünümü</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <CalendarView events={events} />
               </CardContent>
             </Card>

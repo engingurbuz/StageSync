@@ -15,6 +15,14 @@ const MapPicker = dynamic(
   { ssr: false, loading: () => <div className="h-[280px] flex items-center justify-center bg-muted/30 rounded-lg"><Loader2 className="h-8 w-8 animate-spin text-gold" /></div> }
 );
 
+function isDisplayableAddress(name: string): boolean {
+  if (!name || name.length < 2) return false;
+  const cyrillic = /\p{Script=Cyrillic}/u;
+  const greek = /\p{Script=Greek}/u;
+  const arabic = /\p{Script=Arabic}/u;
+  return !cyrillic.test(name) && !greek.test(name) && !arabic.test(name);
+}
+
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   try {
     const res = await fetch(
@@ -22,7 +30,9 @@ async function reverseGeocode(lat: number, lng: number): Promise<string | null> 
       { headers: { "Accept-Language": "tr" } }
     );
     const data = await res.json();
-    return data?.display_name ?? null;
+    const name = data?.display_name ?? null;
+    if (name && !isDisplayableAddress(name)) return null;
+    return name;
   } catch {
     return null;
   }
