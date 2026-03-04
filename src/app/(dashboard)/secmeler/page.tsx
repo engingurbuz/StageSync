@@ -9,11 +9,12 @@ import { Theater, Star, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useAuditions, useCastRoles } from "@/hooks/use-auditions";
 import { CreateAuditionDialog } from "@/components/dialogs/create-audition-dialog";
 import { AuditionCard } from "@/components/audition-card";
+import { EditAuditionDialog } from "@/components/dialogs/edit-audition-dialog";
 import { EditCastRoleDialog } from "@/components/dialogs/edit-cast-role-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { checkPermission } from "@/lib/constants";
-import type { CastRole } from "@/types/database";
+import type { Audition, CastRole } from "@/types/database";
 
 const typeLabels: Record<string, string> = {
   lead: "Başrol",
@@ -41,6 +42,7 @@ export default function AuditionsPage() {
   const { castRoles, isLoading: castLoading, deleteCastRole } = useCastRoles();
   const { profile } = useAuth();
   const { permissions } = usePermissions();
+  const [editingAudition, setEditingAudition] = useState<Audition | null>(null);
   const [editingCastRole, setEditingCastRole] = useState<(CastRole & { profiles?: { full_name: string; voice_type: string | null } | null }) | null>(null);
   const [editCastOpen, setEditCastOpen] = useState(false);
   const canEditCast = checkPermission(profile, "secmeler", "edit", permissions);
@@ -86,11 +88,22 @@ export default function AuditionsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {auditions.map((audition) => (
-                <AuditionCard key={audition.id} audition={audition} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {auditions.map((audition) => (
+                  <AuditionCard
+                    key={audition.id}
+                    audition={audition}
+                    onEdit={(a) => setEditingAudition(a)}
+                  />
+                ))}
+              </div>
+              <EditAuditionDialog
+                audition={editingAudition}
+                open={!!editingAudition}
+                onOpenChange={(open) => !open && setEditingAudition(null)}
+              />
+            </>
           )}
         </TabsContent>
 

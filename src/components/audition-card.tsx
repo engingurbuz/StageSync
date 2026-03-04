@@ -17,7 +17,7 @@ import { checkPermission, hasRole } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { Audition } from "@/types/database";
 import type { SignupSelection } from "@/types/database";
-import { UserPlus, Loader2, Music, Users, Star, Calendar, Trash2 } from "lucide-react";
+import { UserPlus, Loader2, Music, Users, Star, Calendar, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -37,8 +37,10 @@ const selectionLabels: Record<string, string> = {
 
 export function AuditionCard({
   audition,
+  onEdit,
 }: {
   audition: Audition & { productions?: { title: string } | null };
+  onEdit?: (audition: Audition) => void;
 }) {
   const { user, profile } = useAuth();
   const { permissions } = usePermissions();
@@ -69,11 +71,6 @@ export function AuditionCard({
   };
 
   const handleTransferToCast = async () => {
-    const productionId = audition.production_id;
-    if (!productionId) {
-      toast.error("Kadroya aktarmak için seçmenin bir prodüksiyona bağlı olması gerekir.");
-      return;
-    }
     const toTransfer = signups.filter(
       (s) => s.selected_role_type === "lead" || s.selected_role_type === "understudy"
     );
@@ -85,7 +82,7 @@ export function AuditionCard({
     try {
       for (const s of toTransfer) {
         await addCastRole.mutateAsync({
-          production_id: productionId,
+          production_id: audition.production_id ?? null,
           member_id: s.member_id,
           role_name: audition.role_name,
           role_type: s.selected_role_type === "lead" ? "lead" : "understudy",
@@ -119,19 +116,32 @@ export function AuditionCard({
               {statusLabels[audition.status] || audition.status}
             </Badge>
             {canManage && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (typeof window !== "undefined" && window.confirm("Bu seçmeyi silmek istediğinize emin misiniz? Başvurular da silinecektir.")) {
-                    deleteAudition.mutate(audition.id);
-                  }
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-gold"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.(audition);
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof window !== "undefined" && window.confirm("Bu seçmeyi silmek istediğinize emin misiniz? Başvurular da silinecektir.")) {
+                      deleteAudition.mutate(audition.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -211,7 +221,7 @@ export function AuditionCard({
               </ul>
             )}
 
-            {canManage && signups.some((s) => s.selected_role_type === "lead" || s.selected_role_type === "understudy") && audition.production_id && (
+            {canManage && signups.some((s) => s.selected_role_type === "lead" || s.selected_role_type === "understudy") && (
               <Button
                 size="sm"
                 variant="outline"

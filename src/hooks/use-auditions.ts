@@ -52,6 +52,28 @@ export function useAuditions() {
     },
   });
 
+  const updateAudition = useMutation({
+    mutationFn: async (payload: {
+      id: string;
+      updates: Partial<Pick<Audition, "role_name" | "description" | "audition_date" | "location" | "status" | "voice_required" | "max_slots">>;
+      song_ids?: string[];
+    }) => {
+      const { id, updates, song_ids } = payload;
+      const { error: err } = await supabase.from("auditions").update(updates).eq("id", id);
+      if (err) throw err;
+      await supabase.from("audition_songs").delete().eq("audition_id", id);
+      if (song_ids?.length) {
+        const rows = song_ids.map((song_id, i) => ({ audition_id: id, song_id, order_index: i }));
+        const { error: err2 } = await supabase.from("audition_songs").insert(rows);
+        if (err2) throw err2;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditions"] });
+      queryClient.invalidateQueries({ queryKey: ["audition_songs"] });
+    },
+  });
+
   const deleteAudition = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("auditions").delete().eq("id", id);
@@ -64,7 +86,7 @@ export function useAuditions() {
     },
   });
 
-  return { auditions, isLoading, error, addAudition, deleteAudition };
+  return { auditions, isLoading, error, addAudition, updateAudition, deleteAudition };
 }
 
 export function useAuditionSongs(auditionId: string | null) {

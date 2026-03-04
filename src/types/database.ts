@@ -225,7 +225,7 @@ export interface AuditionSignup {
 
 export interface CastRole {
   id: string;
-  production_id: string;
+  production_id: string | null;
   member_id: string;
   role_name: string;
   role_type: CastRoleType;
