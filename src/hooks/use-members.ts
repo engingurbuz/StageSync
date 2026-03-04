@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
-import { addMemberAction } from "@/app/actions/members";
+import { addMemberAction, deleteMemberAction } from "@/app/actions/members";
 
 export function useMembers() {
   const supabase = useMemo(() => createClient(), []);
@@ -81,7 +81,7 @@ export function useMembers() {
     },
   });
 
-  const deleteMember = useMutation({
+  const deactivateMember = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("profiles")
@@ -94,5 +94,17 @@ export function useMembers() {
     },
   });
 
-  return { members, isLoading, error, addMember, updateMember, deleteMember };
+  const deleteMember = useMutation({
+    mutationFn: async (id: string) => {
+      const result = await deleteMemberAction(id);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+    },
+  });
+
+  return { members, isLoading, error, addMember, updateMember, deactivateMember, deleteMember };
 }

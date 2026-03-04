@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useMembers } from "@/hooks/use-members";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -43,12 +43,14 @@ interface EditMemberDialogProps {
 
 export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialogProps) {
   const { profile: currentUser } = useAuth();
-  const { updateMember } = useMembers();
+  const { updateMember, deleteMember } = useMembers();
   
   const [voiceType, setVoiceType] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([]);
   const [status, setStatus] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Yetki kontrolleri
   const currentUserRoles = getUserRoles(currentUser);
@@ -56,11 +58,15 @@ export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialo
   const canEditUserRole = canEditRole(currentUser?.role, currentUserRoles);
   const canEditStatus = canEditMemberStatus(currentUser?.role, currentUserRoles);
 
+  const isCurrentUserAdmin = currentUserRoles.includes("admin");
+  const isSelf = currentUser?.id === member?.id;
+
   useEffect(() => {
     if (member) {
       setVoiceType(member.voice_type || "");
       setSelectedRoles(member.roles?.length ? member.roles : [member.role || "member"]);
       setStatus(member.status || "active");
+      setConfirmDelete(false);
     }
   }, [member]);
 
@@ -223,24 +229,77 @@ export function EditMemberDialog({ member, open, onOpenChange }: EditMemberDialo
               )}
             </div>
 
-            {/* Kaydet butonu */}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="border-border"
-              >
-                İptal
-              </Button>
-              <Button
-                type="submit"
-                disabled={saving}
-                className="bg-gold text-gold-foreground hover:bg-gold/90"
-              >
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Kaydet
-              </Button>
+            {/* Kaydet & Sil butonları */}
+            <div className="flex items-center justify-between pt-2">
+              {/* Sol: Sil butonu (sadece admin, kendisi hariç) */}
+              <div>
+                {isCurrentUserAdmin && !isSelf && (
+                  !confirmDelete ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setConfirmDelete(true)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Sil
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={deleting}
+                        onClick={async () => {
+                          if (!member) return;
+                          setDeleting(true);
+                          try {
+                            await deleteMember.mutateAsync(member.id);
+                            toast.success("Üye kalıcı olarak silindi");
+                            onOpenChange(false);
+                          } catch (err: unknown) {
+                            const message = err instanceof Error ? err.message : "Silme sırasında hata oluştu";
+                            toast.error(message);
+                          } finally {
+                            setDeleting(false);
+                          }
+                        }}
+                      >
+                        {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                        Eminim, Sil
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setConfirmDelete(false)}
+                        className="text-muted-foreground"
+                      >
+                        Vazgeç
+                      </Button>
+                    </div>
+                  )
+                )}
+              </div>
+
+              {/* Sağ: İptal & Kaydet */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="border-border"
+                >
+                  İptal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-gold text-gold-foreground hover:bg-gold/90"
+                >
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Kaydet
+                </Button>
+              </div>
             </div>
           </form>
         )}

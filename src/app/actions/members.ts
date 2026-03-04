@@ -148,3 +148,65 @@ async function addMemberViaSignUp(
 
   return { success: true };
 }
+
+/**
+ * Server action to permanently delete a member.
+ * Deletes the auth user (profile cascades via FK).
+ */
+export async function deleteMemberAction(memberId: string) {
+  const serverSupabase = await createServerClient();
+  const {
+    data: { user: caller },
+  } = await serverSupabase.auth.getUser();
+
+  if (!caller) {
+    return { error: "Oturum açmamışsınız" };
+  }
+
+  // Cannot delete yourself
+  if (caller.id === memberId) {
+    return { error: "Kendinizi silemezsiniz" };
+  }
+
+  const { data: callerProfile } = await serverSupabase
+    .from("profiles")
+    .select("role, roles")
+    .eq("id", caller.id)
+    .single();
+
+  const callerRoles: string[] =
+    callerProfile?.roles && callerProfile.roles.length > 0
+      ? callerProfile.roles
+      : callerProfile?.role
+        ? [callerProfile.role]
+        : [];
+
+  if (!callerRoles.includes("admin")) {
+    return { error: "Üye silme yetkisi sadece adminlerde bulunur" };
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    // Without service_role key, try deleting just the profile
+    const { error } = await serverSupabase
+      .from("profiles")
+      .delete()
+      .eq("id", memberId);
+    if (error) return { error: error.message };
+    return { success: true };
+  }
+
+  const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // Delete auth user — profile will cascade delete
+  const { error } = await adminSupabase.auth.admin.deleteUser(memberId);
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
