@@ -169,7 +169,15 @@ export function AddSongDialog() {
               type="checkbox"
               id="is-medley"
               checked={form.is_medley_part}
-              onChange={(e) => setForm({ ...form, is_medley_part: e.target.checked, parent_song_id: form.parent_song_id || "", medley_position: form.medley_position })}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setForm({
+                  ...form,
+                  is_medley_part: checked,
+                  parent_song_id: form.parent_song_id || "",
+                  medley_position: checked ? 1 : null,
+                });
+              }}
               className="accent-gold"
             />
             <Label htmlFor="is-medley" className="cursor-pointer text-sm">Medley parçası</Label>

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Music, Play, FileText, Loader2, Music2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +17,42 @@ import { EditSongDialog } from "@/components/dialogs/edit-song-dialog";
 import { useSongs } from "@/hooks/use-songs";
 import type { Song } from "@/types/database";
 
+type RowItem = { song: Song; isMedleyPart: boolean };
+
+function buildOrderedRows(songs: Song[]): RowItem[] {
+  const roots = songs
+    .filter((s) => !s.parent_song_id)
+    .sort((a, b) => a.title.localeCompare(b.title, "tr"));
+  const byParent = new Map<string, Song[]>();
+  for (const s of songs) {
+    if (s.parent_song_id) {
+      const list = byParent.get(s.parent_song_id) ?? [];
+      list.push(s);
+      byParent.set(s.parent_song_id, list);
+    }
+  }
+  for (const list of byParent.values()) {
+    list.sort((a, b) => (a.medley_position ?? 0) - (b.medley_position ?? 0));
+  }
+  const rows: RowItem[] = [];
+  for (const root of roots) {
+    rows.push({ song: root, isMedleyPart: false });
+    const children = byParent.get(root.id);
+    if (children?.length) {
+      for (const child of children) {
+        rows.push({ song: child, isMedleyPart: true });
+      }
+    }
+  }
+  return rows;
+}
+
 export default function RepertoirePage() {
   const { songs, isLoading } = useSongs();
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const orderedRows = useMemo(() => buildOrderedRows(songs), [songs]);
 
   const handleSongClick = (song: Song) => {
     setSelectedSong(song);
@@ -62,21 +93,25 @@ export default function RepertoirePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {songs.map((song) => (
-                  <TableRow 
-                    key={song.id} 
-                    className="border-border hover:bg-muted/30 cursor-pointer"
+                {orderedRows.map(({ song, isMedleyPart }) => (
+                  <TableRow
+                    key={song.id}
+                    className={`border-border cursor-pointer ${
+                      isMedleyPart
+                        ? "bg-muted/40 hover:bg-muted/60 border-l-2 border-l-gold/30"
+                        : "hover:bg-muted/30"
+                    }`}
                     onClick={() => handleSongClick(song)}
                   >
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className={`font-medium text-foreground ${isMedleyPart ? "pl-10" : ""}`}>
                       <div className="flex items-center gap-2">
-                        <Music className="h-4 w-4 text-gold" />
-                        {song.title}
-                        {song.medley_position != null && (
-                          <span className="text-xs text-muted-foreground">
-                            (Medley parçası {song.medley_position})
+                        <Music className={`h-4 w-4 shrink-0 ${isMedleyPart ? "text-gold/70" : "text-gold"}`} />
+                        {isMedleyPart && (
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {song.medley_position}.{" "}
                           </span>
                         )}
+                        {song.title}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
