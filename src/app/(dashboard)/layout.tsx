@@ -1,29 +1,11 @@
-"use client";
+import { DashboardShell } from "./dashboard-shell";
 
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
-import { PendingFormsCheck } from "@/components/dialogs/pending-forms-check";
+export const dynamic = "force-dynamic";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Desktop sidebar */}
-      <Sidebar />
-
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          {children}
-        </main>
-      </div>
-
-      {/* Required forms check - blocks UI until completed */}
-      <PendingFormsCheck />
-    </div>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }

@@ -68,15 +68,6 @@ export default function SettingsPage() {
   // Editable roles for permission management (exclude admin - always has full access)
   const editableRoles = USER_ROLES.filter((r) => r.value !== "admin");
 
-  // Email change
-  const [newEmail, setNewEmail] = useState("");
-  const [changingEmail, setChangingEmail] = useState(false);
-
-  // Password change
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
-
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name || "");
