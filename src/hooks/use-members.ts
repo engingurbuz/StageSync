@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
+import { addMemberAction } from "@/app/actions/members";
 
 export function useMembers() {
   const supabase = useMemo(() => createClient(), []);
@@ -33,51 +34,16 @@ export function useMembers() {
       phone?: string;
       roles?: string[];
     }) => {
-      // Admin invite: create auth user then profile updates via trigger
-      const { data, error } = await supabase.auth.admin.createUser({
+      const result = await addMemberAction({
         email: member.email,
-        email_confirm: true,
-        user_metadata: { full_name: member.full_name },
+        full_name: member.full_name,
+        voice_type: member.voice_type || null,
+        phone: member.phone || null,
+        roles: member.roles,
       });
-      if (error) {
-        // Fallback: insert directly into profiles (for demo/dev)
-        const roles = member.roles && member.roles.length > 0 ? member.roles : ["member"];
-        const insertData: Record<string, unknown> = {
-          id: crypto.randomUUID(),
-          email: member.email,
-          full_name: member.full_name,
-          voice_type: member.voice_type || null,
-          phone: member.phone || null,
-          role: roles[0] || "member",
-          status: "active",
-        };
-        // Try with roles column first, fallback without
-        const { error: insertError } = await supabase.from("profiles").insert({ ...insertData, roles });
-        if (insertError) {
-          const { error: insertError2 } = await supabase.from("profiles").insert(insertData);
-          if (insertError2) throw insertError2;
-        }
-        return;
-      }
-      // Update the profile with extra info
-      if (data.user) {
-        const roles = member.roles && member.roles.length > 0 ? member.roles : ["member"];
-        const updateData: Record<string, unknown> = {
-          voice_type: member.voice_type || null,
-          phone: member.phone || null,
-          role: (roles[0] as Profile["role"]) || "member",
-        };
-        // Try with roles column first, fallback without
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ ...updateData, roles })
-          .eq("id", data.user.id);
-        if (updateError) {
-          await supabase
-            .from("profiles")
-            .update(updateData)
-            .eq("id", data.user.id);
-        }
+
+      if (result.error) {
+        throw new Error(result.error);
       }
     },
     onSuccess: () => {
