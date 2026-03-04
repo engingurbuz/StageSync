@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Profile } from "@/types/database";
-import { VOICE_TYPES } from "@/lib/constants";
+import { VOICE_TYPES, ROLE_LABELS } from "@/lib/constants";
 import {
   Select,
   SelectContent,
@@ -244,9 +244,9 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Rol</Label>
                   <Input
-                    value={profile?.role || "member"}
+                    value={ROLE_LABELS[profile?.role || "member"] || profile?.role || "member"}
                     disabled
-                    className="bg-muted/30 border-border text-muted-foreground capitalize"
+                    className="bg-muted/30 border-border text-muted-foreground"
                   />
                 </div>
               </div>

@@ -29,10 +29,6 @@ export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps
   const { user, profile } = useAuth();
   const [form, setForm] = useState({
     title: "",
-    composer: "",
-    arranger: "",
-    genre: "",
-    difficulty: 3,
     notes: "",
     sheet_music_url: "",
     midi_url: "",
@@ -50,10 +46,6 @@ export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps
     if (song) {
       setForm({
         title: song.title || "",
-        composer: song.composer || "",
-        arranger: song.arranger || "",
-        genre: song.genre || "",
-        difficulty: song.difficulty || 3,
         notes: song.notes || "",
         sheet_music_url: song.sheet_music_url || "",
         midi_url: song.midi_url || "",
@@ -111,10 +103,6 @@ export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps
       await updateSong.mutateAsync({
         id: song.id,
         title: form.title,
-        composer: form.composer || null,
-        arranger: form.arranger || null,
-        genre: form.genre || null,
-        difficulty: form.difficulty,
         notes: form.notes || null,
         sheet_music_url: sheetUrl || null,
         midi_url: midiUrl || null,
@@ -164,24 +152,6 @@ export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps
 
         {!canEdit ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Besteci</p>
-                <p className="text-sm text-foreground">{song.composer || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Aranjör</p>
-                <p className="text-sm text-foreground">{song.arranger || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Tür</p>
-                <p className="text-sm text-foreground">{song.genre || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Zorluk</p>
-                <p className="text-sm text-foreground">{song.difficulty}/5</p>
-              </div>
-            </div>
             {song.notes && (
               <div>
                 <p className="text-xs text-muted-foreground">Notlar</p>
@@ -223,49 +193,6 @@ export function EditSongDialog({ song, open, onOpenChange }: EditSongDialogProps
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="bg-muted/30 border-border"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="edit-composer">Besteci</Label>
-                <Input
-                  id="edit-composer"
-                  value={form.composer}
-                  onChange={(e) => setForm({ ...form, composer: e.target.value })}
-                  className="bg-muted/30 border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-arranger">Aranjör</Label>
-                <Input
-                  id="edit-arranger"
-                  value={form.arranger}
-                  onChange={(e) => setForm({ ...form, arranger: e.target.value })}
-                  className="bg-muted/30 border-border"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="edit-genre">Tür</Label>
-                <Input
-                  id="edit-genre"
-                  value={form.genre}
-                  onChange={(e) => setForm({ ...form, genre: e.target.value })}
-                  className="bg-muted/30 border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-difficulty">Zorluk (1-5)</Label>
-                <Input
-                  id="edit-difficulty"
-                  type="number"
-                  min={1}
-                  max={5}
-                  value={form.difficulty}
-                  onChange={(e) => setForm({ ...form, difficulty: parseInt(e.target.value) || 3 })}
-                  className="bg-muted/30 border-border"
-                />
-              </div>
             </div>
 
             {/* Dosya Yükleme Alanları */}

@@ -25,7 +25,8 @@ export const USER_ROLES: { value: UserRole; label: string }[] = [
   { value: "admin", label: "Admin" },
   { value: "section_leader", label: "Partisyon Şefi" },
   { value: "creative_team", label: "Koro Şefi" },
-  { value: "member", label: "Üye" },
+  { value: "member", label: "Korist" },
+  { value: "observer", label: "Gözlemci" },
 ];
 
 export const ROLE_LABELS: Record<string, string> = Object.fromEntries(

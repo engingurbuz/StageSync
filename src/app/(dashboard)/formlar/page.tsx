@@ -40,7 +40,7 @@ const statusColors: Record<string, string> = {
 
 const targetLabels: Record<string, string> = {
   all: "Tüm Üyeler",
-  member: "Sadece Üyeler",
+  member: "Sadece Koristler",
   section_leader: "Partisyon Şefleri",
   specific: "Belirli Roller",
 };

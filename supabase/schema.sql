@@ -16,7 +16,8 @@ CREATE TYPE user_role AS ENUM (
   'admin',
   'section_leader',
   'creative_team',
-  'member'
+  'member',
+  'observer'
 );
 
 CREATE TYPE voice_type AS ENUM (

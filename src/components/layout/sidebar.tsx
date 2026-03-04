@@ -39,13 +39,13 @@ const navItems = [
     title: "Ana Sayfa",
     href: "/ana-sayfa",
     icon: LayoutDashboard,
-    roles: ["admin", "section_leader", "creative_team", "member"],
+    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
   },
   {
     title: "Üyeler",
     href: "/uyeler",
     icon: Users,
-    roles: ["admin", "section_leader", "creative_team", "member"],
+    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
   },
   {
     title: "Yoklama",
@@ -57,13 +57,13 @@ const navItems = [
     title: "Repertuvar",
     href: "/repertuvar",
     icon: Music,
-    roles: ["admin", "section_leader", "creative_team", "member"],
+    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
   },
   {
     title: "Seçmeler & Kadro",
     href: "/secmeler",
     icon: Theater,
-    roles: ["admin", "section_leader", "creative_team", "member"],
+    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
   },
   {
     title: "Yaratıcı Pano",
@@ -75,13 +75,13 @@ const navItems = [
     title: "Duyurular",
     href: "/duyurular",
     icon: Megaphone,
-    roles: ["admin", "section_leader", "creative_team", "member"],
+    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
   },
   {
     title: "Formlar",
     href: "/formlar",
     icon: ClipboardList,
-    roles: ["admin", "section_leader", "creative_team", "member"],
+    roles: ["admin", "section_leader", "creative_team", "member", "observer"],
   },
 ];
 
@@ -176,7 +176,8 @@ export function Sidebar() {
     admin: "Yönetici",
     section_leader: "Bölüm Lideri",
     creative_team: "Yaratıcı Ekip",
-    member: "Üye",
+    member: "Korist",
+    observer: "Gözlemci",
   };
 
   return (

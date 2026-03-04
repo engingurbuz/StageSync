@@ -44,7 +44,7 @@ const questionTypes = [
 
 const targetOptions = [
   { value: "all", label: "Tüm Üyeler" },
-  { value: "member", label: "Sadece Üyeler" },
+  { value: "member", label: "Sadece Koristler" },
   { value: "section_leader", label: "Partisyon Şefleri" },
   { value: "specific", label: "Belirli Roller" },
 ];

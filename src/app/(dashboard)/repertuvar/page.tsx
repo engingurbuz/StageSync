@@ -67,9 +67,7 @@ export default function RepertoirePage() {
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="text-muted-foreground">Başlık</TableHead>
-                  <TableHead className="text-muted-foreground">Besteci</TableHead>
                   <TableHead className="text-muted-foreground hidden md:table-cell">Ses Grupları</TableHead>
-                  <TableHead className="text-muted-foreground hidden sm:table-cell">Zorluk</TableHead>
                   <TableHead className="text-muted-foreground text-right">Dosyalar</TableHead>
                 </TableRow>
               </TableHeader>
@@ -86,25 +84,12 @@ export default function RepertoirePage() {
                         {song.title}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{song.composer || "—"}</TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {(song.voice_parts || []).map((part) => (
                           <Badge key={part} variant="outline" className="border-gold/20 text-gold text-[10px]">
                             {voiceLabels[part] || part}
                           </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={`h-2 w-2 rounded-full ${
-                              i < (song.difficulty || 0) ? "bg-gold" : "bg-muted"
-                            }`}
-                          />
                         ))}
                       </div>
                     </TableCell>
