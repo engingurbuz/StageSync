@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { CreateEventDialog } from "@/components/dialogs/create-event-dialog";
+import { EventDetailDialog } from "@/components/dialogs/event-detail-dialog";
 import { useEvents } from "@/hooks/use-events";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -47,7 +48,13 @@ const eventTypeColors: Record<string, string> = {
   social: "bg-pink-500/10 text-pink-400 border-pink-500/30",
 };
 
-function CalendarView({ events }: { events: Event[] }) {
+function CalendarView({
+  events,
+  onEventClick,
+}: {
+  events: Event[];
+  onEventClick?: (event: Event) => void;
+}) {
   const [month, setMonth] = useState(() => new Date());
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
@@ -126,13 +133,18 @@ function CalendarView({ events }: { events: Event[] }) {
                 </span>
                 <div className="mt-1.5 space-y-1">
                   {dayEvents.slice(0, 2).map((e) => (
-                    <div
+                    <button
                       key={e.id}
-                      className="truncate rounded-lg px-2 py-1 text-[11px] font-medium bg-gradient-to-r from-amber-500/15 to-gold/10 text-gold border border-gold/20 shadow-sm"
+                      type="button"
+                      className="w-full text-left truncate rounded-lg px-2 py-1 text-[11px] font-medium bg-gradient-to-r from-amber-500/15 to-gold/10 text-gold border border-gold/20 shadow-sm hover:from-amber-500/25 hover:to-gold/20 transition-colors cursor-pointer"
                       title={e.title}
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        onEventClick?.(e);
+                      }}
                     >
                       {e.title}
-                    </div>
+                    </button>
                   ))}
                   {dayEvents.length > 2 && (
                     <span className="text-[10px] text-muted-foreground font-medium">
@@ -154,9 +166,24 @@ export default function EventsPage() {
   const { permissions } = usePermissions();
   const { events, upcomingEvents, pastEvents, isLoading } = useEvents();
   const canCreate = checkPermission(profile, "etkinlikler", "create", permissions);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openEventDetail = (event: Event) => {
+    setSelectedEvent(event);
+    setDetailOpen(true);
+  };
 
   return (
     <div className="space-y-6">
+      <EventDetailDialog
+        event={selectedEvent}
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (!open) setSelectedEvent(null);
+        }}
+      />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -208,9 +235,11 @@ export default function EventsPage() {
                       const locationText = getLocationDisplayText(event.location);
                       const hasLocation = locationText || (event.location_lat != null && event.location_lng != null);
                       return (
-                        <div
+                        <button
                           key={event.id}
-                          className="group flex items-center gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-gold/30 hover:shadow-md"
+                          type="button"
+                          className="w-full text-left group flex items-center gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-gold/30 hover:shadow-md cursor-pointer"
+                          onClick={() => openEventDetail(event)}
                         >
                           <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-gold/20 text-gold shadow-inner">
                             <span className="text-xs font-semibold uppercase tracking-wider">
@@ -248,7 +277,7 @@ export default function EventsPage() {
                           >
                             {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
                           </Badge>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -268,9 +297,11 @@ export default function EventsPage() {
                 <CardContent>
                   <div className="space-y-2">
                     {pastEvents.slice(0, 10).map((event) => (
-                      <div
+                      <button
                         key={event.id}
-                        className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-sm transition-colors hover:bg-muted/30"
+                        type="button"
+                        className="w-full text-left flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-sm transition-colors hover:bg-muted/30 cursor-pointer"
+                        onClick={() => openEventDetail(event)}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-muted-foreground">
@@ -286,7 +317,7 @@ export default function EventsPage() {
                         >
                           {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
                         </Badge>
-                      </div>
+                      </button>
                     ))}
                     {pastEvents.length > 10 && (
                       <p className="text-xs text-muted-foreground pt-2">
@@ -304,7 +335,7 @@ export default function EventsPage() {
                 <CardTitle className="text-foreground">Takvim görünümü</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <CalendarView events={events} />
+                <CalendarView events={events} onEventClick={openEventDetail} />
               </CardContent>
             </Card>
           </TabsContent>

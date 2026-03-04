@@ -12,6 +12,7 @@ import { checkPermission } from "@/lib/constants";
 import { EVENT_TYPE_LABELS } from "@/lib/constants";
 import { getLocationDisplayText } from "@/lib/utils";
 import { AttendanceEntryDialog } from "@/components/dialogs/attendance-entry-dialog";
+import { EventDetailDialog } from "@/components/dialogs/event-detail-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import type { Event } from "@/types/database";
@@ -32,11 +33,19 @@ export default function AttendancePage() {
   const { upcomingEvents, pastEvents, isLoading } = useEvents();
   const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const canEditAttendance = checkPermission(profile, "yoklama", "edit", permissions);
 
-  const openAttendanceFor = (event: Event) => {
+  const openAttendanceFor = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation();
     setAttendanceEvent(event);
     setAttendanceDialogOpen(true);
+  };
+
+  const openEventDetail = (event: Event) => {
+    setSelectedEvent(event);
+    setDetailOpen(true);
   };
 
   return (
@@ -56,6 +65,14 @@ export default function AttendancePage() {
         onOpenChange={(open) => {
           setAttendanceDialogOpen(open);
           if (!open) setAttendanceEvent(null);
+        }}
+      />
+      <EventDetailDialog
+        event={selectedEvent}
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (!open) setSelectedEvent(null);
         }}
       />
 
@@ -91,7 +108,11 @@ export default function AttendancePage() {
                     return (
                       <div
                         key={event.id}
-                        className="group flex items-center gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-gold/30 hover:shadow-md"
+                        role="button"
+                        tabIndex={0}
+                        className="group flex items-center gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-gold/30 hover:shadow-md cursor-pointer"
+                        onClick={() => openEventDetail(event)}
+                        onKeyDown={(e) => e.key === "Enter" && openEventDetail(event)}
                       >
                         <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-gold/20 text-gold shadow-inner">
                           <span className="text-xs font-semibold uppercase tracking-wider">
@@ -128,7 +149,7 @@ export default function AttendancePage() {
                             variant="outline"
                             size="sm"
                             className="shrink-0 rounded-lg border-gold/30 hover:bg-gold/10 hover:border-gold/50 hover:text-gold transition-colors"
-                            onClick={() => openAttendanceFor(event)}
+                            onClick={(e) => openAttendanceFor(e, event)}
                           >
                             <ClipboardCheck className="h-4 w-4 mr-1" />
                             Yoklama girişi
