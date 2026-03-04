@@ -145,6 +145,15 @@ CREATE POLICY "Admins can insert profiles"
     )
   );
 
+CREATE POLICY "Admins can delete profiles"
+  ON profiles FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
 -- ──────────────────────────────────────────────────────────────────────────────
 -- 2b. ROLE PERMISSIONS (configurable per-role per-section CRUD permissions)
 -- ──────────────────────────────────────────────────────────────────────────────

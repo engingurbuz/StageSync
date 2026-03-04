@@ -100,8 +100,13 @@ export function useMembers() {
       if (result.error) {
         throw new Error(result.error);
       }
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (deletedId) => {
+      // Immediately remove from cache so UI updates instantly
+      queryClient.setQueryData<Profile[]>(["members"], (old) =>
+        old ? old.filter((m) => m.id !== deletedId) : []
+      );
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
   });
