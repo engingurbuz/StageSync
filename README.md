@@ -1,4 +1,6 @@
-# StageSync — Koro & Müzikal Yönetim Platformu
+# Maestro — Koro & Müzikal Yönetim Platformu
+
+*Koronun Dijital Şefi*
 
 Müzikal tiyatro ve koro grupları için kapsamlı yönetim platformu. Üye takibi, yoklama, repertuvar, seçmeler, yaratıcı görevler, duyurular ve formlar tek bir uygulamada. Next.js 16, Supabase ve Tailwind CSS ile geliştirilmiştir.
 
@@ -109,7 +111,7 @@ Supabase’de ilk kullanıcıyı oluşturmak için:
 node scripts/seed-test-user.mjs
 ```
 
-Bu script `test@stagesync.com` / `Test1234!` ile bir kullanıcı ve profil oluşturur. **Supabase Dashboard’dan bu kullanıcıya `admin` rolü atayabilirsiniz** (profiles tablosunda `role` ve `roles` alanlarını güncelleyin).
+Bu script `test@maestro.app` / `Test1234!` ile bir kullanıcı ve profil oluşturur. **Supabase Dashboard’dan bu kullanıcıya `admin` rolü atayabilirsiniz** (profiles tablosunda `role` ve `roles` alanlarını güncelleyin).
 
 ## Ortam Değişkenleri
 
@@ -157,4 +159,4 @@ Vercel ile deploy için:
 
 ## Lisans
 
-Private — StageSync / Koro Yönetim Platformu.
+Private — Maestro / Koro Yönetim Platformu.

@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vokal Akademi — Koro Takip Sistemi",
+  title: "Maestro | Vokal Akademi Müzikal Korosu Yönetim Sistemi",
   description:
-    "Vokal Akademi Müzikal Korosu için koro takip sistemi. Provalar, yoklama, repertuvar, üye yönetimi ve form sistemleri.",
+    "Maestro — Vokal Akademi Müzikal Korosu için kapsamlı yönetim platformu. Provalar, yoklama, repertuvar, üye yönetimi ve form sistemleri.",
 };
 
 export default function RootLayout({

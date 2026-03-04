@@ -52,11 +52,12 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              Vokal Akademi Müzikal Korosu
+              Maestro
             </CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Koro Takip Sistemine Giriş Yapın
+              Vokal Akademi Müzikal Korosu Yönetim Sistemine Giriş Yapın
             </p>
+            <p className="text-xs text-gold/60 italic">Koronun Dijital Şefi</p>
           </div>
         </CardHeader>
 

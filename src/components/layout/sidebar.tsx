@@ -113,10 +113,10 @@ function SidebarBrand({ collapsed }: { collapsed: boolean }) {
       {!collapsed && (
         <div className="flex flex-col">
           <span className="text-sm font-bold tracking-wide text-foreground">
-            Vokal Akademi
+            Maestro
           </span>
           <span className="text-[10px] font-medium uppercase tracking-widest text-gold/70">
-            Koro Takip Sistemi
+            Vokal Akademi
           </span>
         </div>
       )}

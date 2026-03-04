@@ -16,6 +16,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
+        <footer className="shrink-0 border-t border-border px-4 py-2 text-center text-[11px] text-muted-foreground/50">
+          Maestro — Koronun Dijital Şefi
+        </footer>
       </div>
 
       {/* Required forms check - blocks UI until completed */}

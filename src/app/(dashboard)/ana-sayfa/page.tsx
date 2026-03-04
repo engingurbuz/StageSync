@@ -100,7 +100,7 @@ export default function DashboardPage() {
           Ana Sayfa
         </h1>
         <p className="text-sm text-muted-foreground">
-          Vokal Akademi Koro Takip Sistemine hoş geldiniz. İşte koronuzun genel görünümü.
+          Maestro'ya hoş geldiniz. İşte koronuzun genel görünümü.
         </p>
       </div>
 

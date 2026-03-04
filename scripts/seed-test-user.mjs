@@ -41,7 +41,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const TEST_EMAIL = "test@stagesync.com";
+const TEST_EMAIL = "test@maestro.app";
 const TEST_PASSWORD = "Test1234!";
 const TEST_NAME = "Test Kullanıcı";
 

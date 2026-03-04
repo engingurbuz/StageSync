@@ -25,7 +25,7 @@ export default function KVKKPage() {
               Kişisel Verilerin Korunması Aydınlatma Metni
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-2">
-              Vokal Akademi Müzikal Korosu - Koro Takip Sistemi
+              Maestro — Vokal Akademi Müzikal Korosu Yönetim Sistemi
             </p>
           </CardHeader>
 
