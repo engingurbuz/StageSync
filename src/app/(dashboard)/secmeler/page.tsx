@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Theater, Star, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Theater, Star, Loader2, Pencil, Trash2, Music2 } from "lucide-react";
 import { useAuditions, useCastRoles } from "@/hooks/use-auditions";
 import { CreateAuditionDialog } from "@/components/dialogs/create-audition-dialog";
 import { AuditionCard } from "@/components/audition-card";
@@ -14,7 +14,7 @@ import { EditCastRoleDialog } from "@/components/dialogs/edit-cast-role-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { checkPermission } from "@/lib/constants";
-import type { Audition, CastRole } from "@/types/database";
+import type { Audition, CastRole, CastRoleType } from "@/types/database";
 
 const typeLabels: Record<string, string> = {
   lead: "Başrol",
@@ -29,6 +29,34 @@ const typeStyles: Record<string, string> = {
   ensemble: "bg-blue-500/10 text-blue-400 border-blue-500/30",
   swing: "bg-purple-500/10 text-purple-400 border-purple-500/30",
 };
+
+type CastRoleWithProfile = CastRole & { profiles?: { full_name: string; voice_type: string | null } | null };
+
+function groupCastByRoleName(roles: CastRoleWithProfile[]) {
+  const byRoleName = new Map<
+    string,
+    { lead: CastRoleWithProfile[]; understudy: CastRoleWithProfile[]; ensemble: CastRoleWithProfile[]; swing: CastRoleWithProfile[] }
+  >();
+  for (const r of roles) {
+    const name = r.role_name || "—";
+    if (!byRoleName.has(name)) {
+      byRoleName.set(name, { lead: [], understudy: [], ensemble: [], swing: [] });
+    }
+    const group = byRoleName.get(name)!;
+    if (r.role_type === "lead") group.lead.push(r);
+    else if (r.role_type === "understudy") group.understudy.push(r);
+    else if (r.role_type === "ensemble") group.ensemble.push(r);
+    else if (r.role_type === "swing") group.swing.push(r);
+  }
+  return Array.from(byRoleName.entries()).sort(([a], [b]) => a.localeCompare(b, "tr"));
+}
+
+const ROLE_TYPE_SECTIONS: { key: CastRoleType; label: string }[] = [
+  { key: "lead", label: "Asiller" },
+  { key: "understudy", label: "Yedekler" },
+  { key: "ensemble", label: "Topluluk" },
+  { key: "swing", label: "Swing" },
+];
 
 const statusLabels: Record<string, string> = {
   open: "Açık",
@@ -46,6 +74,10 @@ export default function AuditionsPage() {
   const [editingCastRole, setEditingCastRole] = useState<(CastRole & { profiles?: { full_name: string; voice_type: string | null } | null }) | null>(null);
   const [editCastOpen, setEditCastOpen] = useState(false);
   const canEditCast = checkPermission(profile, "secmeler", "edit", permissions);
+  const castGroupedByRoleName = useMemo(
+    () => groupCastByRoleName(castRoles as CastRoleWithProfile[]),
+    [castRoles]
+  );
 
   return (
     <div className="space-y-6">
@@ -131,52 +163,69 @@ export default function AuditionsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {castRoles.map((role) => (
-                    <div
-                      key={role.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 p-3 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        {role.role_type === "lead" && <Star className="h-4 w-4 text-gold fill-gold shrink-0" />}
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground">{role.role_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {role.profiles?.full_name || "—"}
-                          </p>
-                        </div>
+                <div className="space-y-6">
+                  {castGroupedByRoleName.map(([roleName, group]) => (
+                    <div key={roleName} className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                      <div className="flex items-center gap-2 px-4 py-3 bg-muted/40 border-b border-border">
+                        <Music2 className="h-4 w-4 text-gold" />
+                        <h3 className="font-semibold text-foreground">{roleName}</h3>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="outline" className={typeStyles[role.role_type] || ""}>
-                          {typeLabels[role.role_type] || role.role_type}
-                        </Badge>
-                        {canEditCast && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-gold"
-                              onClick={() => {
-                                setEditingCastRole(role);
-                                setEditCastOpen(true);
-                              }}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => {
-                                if (typeof window !== "undefined" && window.confirm("Bu kadro kaydını silmek istediğinize emin misiniz?")) {
-                                  deleteCastRole.mutate(role.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
+                      <div className="p-3 space-y-4">
+                        {ROLE_TYPE_SECTIONS.map(({ key, label }) => {
+                          const list = group[key as keyof typeof group];
+                          if (!list?.length) return null;
+                          return (
+                            <div key={key}>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                                {label}
+                              </p>
+                              <ul className="space-y-1.5">
+                                {list.map((role) => (
+                                  <li
+                                    key={role.id}
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/50 px-3 py-2 hover:bg-muted/30 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      {role.role_type === "lead" && (
+                                        <Star className="h-3.5 w-3.5 text-gold fill-gold shrink-0" />
+                                      )}
+                                      <span className="text-sm text-foreground truncate">
+                                        {role.profiles?.full_name || "—"}
+                                      </span>
+                                    </div>
+                                    {canEditCast && (
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 text-muted-foreground hover:text-gold"
+                                          onClick={() => {
+                                            setEditingCastRole(role);
+                                            setEditCastOpen(true);
+                                          }}
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                          onClick={() => {
+                                            if (typeof window !== "undefined" && window.confirm("Bu kadro kaydını silmek istediğinize emin misiniz?")) {
+                                              deleteCastRole.mutate(role.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
