@@ -20,8 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2, Calendar } from "lucide-react";
+import { Plus, Loader2, Music } from "lucide-react";
 import { useAuditions } from "@/hooks/use-auditions";
+import { useSongs } from "@/hooks/use-songs";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { checkPermission } from "@/lib/constants";
@@ -29,7 +30,7 @@ import { toast } from "sonner";
 
 export function CreateAuditionDialog() {
   const [open, setOpen] = useState(false);
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { permissions } = usePermissions();
   const { addAudition } = useAuditions();
   const [form, setForm] = useState({
@@ -37,7 +38,9 @@ export function CreateAuditionDialog() {
     description: "",
     location: "",
     deadline: "",
+    song_ids: [] as string[],
   });
+  const { songs } = useSongs();
 
   // Yetki kontrolü: seçmeler bölümünde oluşturma yetkisi
   const canCreate = checkPermission(profile, "secmeler", "create", permissions);
@@ -51,19 +54,22 @@ export function CreateAuditionDialog() {
 
     try {
       await addAudition.mutateAsync({
-        role_name: form.role_name,
-        description: form.description || null,
-        location: form.location || null,
-        audition_date: form.deadline || null,
-        status: "open",
-        production_id: null,
-        voice_required: null,
-        max_slots: null,
-        created_by: null,
+        audition: {
+          role_name: form.role_name,
+          description: form.description || null,
+          location: form.location || null,
+          audition_date: form.deadline || null,
+          status: "open",
+          production_id: null,
+          voice_required: null,
+          max_slots: null,
+          created_by: user?.id ?? null,
+        },
+        song_ids: form.song_ids.length ? form.song_ids : undefined,
       });
       toast.success("Seçme başarıyla oluşturuldu");
       setOpen(false);
-      setForm({ role_name: "", description: "", location: "", deadline: "" });
+      setForm({ role_name: "", description: "", location: "", deadline: "", song_ids: [] });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Seçme oluşturulurken hata oluştu";
       toast.error(message);
@@ -133,6 +139,39 @@ export function CreateAuditionDialog() {
               onChange={(e) => setForm({ ...form, deadline: e.target.value })}
               className="bg-muted/30 border-border"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Music className="h-4 w-4 text-gold" />
+              Repertuvardan şarkılar (bu seçme hangi şarkılar için?)
+            </Label>
+            <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/20 p-2 space-y-1">
+              {songs.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Repertuvarda şarkı yok.</p>
+              ) : (
+                songs.map((song) => (
+                  <label
+                    key={song.id}
+                    className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.song_ids.includes(song.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setForm({ ...form, song_ids: [...form.song_ids, song.id] });
+                        } else {
+                          setForm({ ...form, song_ids: form.song_ids.filter((id) => id !== song.id) });
+                        }
+                      }}
+                      className="accent-gold"
+                    />
+                    <span className="truncate">{song.title}</span>
+                  </label>
+                ))
+              )}
+            </div>
           </div>
 
           <Button

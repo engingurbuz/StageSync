@@ -18,15 +18,6 @@ import { EditSongDialog } from "@/components/dialogs/edit-song-dialog";
 import { useSongs } from "@/hooks/use-songs";
 import type { Song } from "@/types/database";
 
-const voiceLabels: Record<string, string> = {
-  soprano: "Soprano",
-  mezzo_soprano: "Mezzo Soprano",
-  alto: "Alto",
-  tenor: "Tenor",
-  baritone: "Bariton",
-  bass: "Bas",
-};
-
 export default function RepertoirePage() {
   const { songs, isLoading } = useSongs();
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
@@ -67,7 +58,6 @@ export default function RepertoirePage() {
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="text-muted-foreground">Başlık</TableHead>
-                  <TableHead className="text-muted-foreground hidden md:table-cell">Ses Grupları</TableHead>
                   <TableHead className="text-muted-foreground text-right">Dosyalar</TableHead>
                 </TableRow>
               </TableHeader>
@@ -82,15 +72,11 @@ export default function RepertoirePage() {
                       <div className="flex items-center gap-2">
                         <Music className="h-4 w-4 text-gold" />
                         {song.title}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="flex flex-wrap gap-1">
-                        {(song.voice_parts || []).map((part) => (
-                          <Badge key={part} variant="outline" className="border-gold/20 text-gold text-[10px]">
-                            {voiceLabels[part] || part}
-                          </Badge>
-                        ))}
+                        {song.medley_position != null && (
+                          <span className="text-xs text-muted-foreground">
+                            (Medley parçası {song.medley_position})
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

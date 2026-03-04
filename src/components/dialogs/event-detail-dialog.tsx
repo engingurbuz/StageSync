@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Calendar, FileText, Map, MapOff } from "lucide-react";
+import { MapPin, Clock, Calendar, FileText, Map, PanelTopClose } from "lucide-react";
 import { getLocationDisplayText } from "@/lib/utils";
 import { EVENT_TYPE_LABELS } from "@/lib/constants";
 import { format } from "date-fns";
@@ -107,7 +107,7 @@ export function EventDetailDialog({
                     >
                       {showMap ? (
                         <>
-                          <MapOff className="h-3.5 w-3.5 mr-1.5 inline" />
+                          <PanelTopClose className="h-3.5 w-3.5 mr-1.5 inline" />
                           Haritayı kapat
                         </>
                       ) : (

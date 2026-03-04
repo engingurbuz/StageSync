@@ -1,11 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Theater, Star, Loader2 } from "lucide-react";
+import { Theater, Star, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useAuditions, useCastRoles } from "@/hooks/use-auditions";
 import { CreateAuditionDialog } from "@/components/dialogs/create-audition-dialog";
+import { AuditionCard } from "@/components/audition-card";
+import { EditCastRoleDialog } from "@/components/dialogs/edit-cast-role-dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { checkPermission } from "@/lib/constants";
+import type { CastRole } from "@/types/database";
 
 const typeLabels: Record<string, string> = {
   lead: "Başrol",
@@ -30,7 +38,12 @@ const statusLabels: Record<string, string> = {
 
 export default function AuditionsPage() {
   const { auditions, isLoading: auditionsLoading } = useAuditions();
-  const { castRoles, isLoading: castLoading } = useCastRoles();
+  const { castRoles, isLoading: castLoading, deleteCastRole } = useCastRoles();
+  const { profile } = useAuth();
+  const { permissions } = usePermissions();
+  const [editingCastRole, setEditingCastRole] = useState<(CastRole & { profiles?: { full_name: string; voice_type: string | null } | null }) | null>(null);
+  const [editCastOpen, setEditCastOpen] = useState(false);
+  const canEditCast = checkPermission(profile, "secmeler", "edit", permissions);
 
   return (
     <div className="space-y-6">
@@ -75,19 +88,7 @@ export default function AuditionsPage() {
           ) : (
             <div className="space-y-3">
               {auditions.map((audition) => (
-                <Card key={audition.id} className="border-border bg-card">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{audition.role_name}</p>
-                        <p className="text-xs text-muted-foreground">{audition.description}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {statusLabels[audition.status] || audition.status}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
+                <AuditionCard key={audition.id} audition={audition} />
               ))}
             </div>
           )}
@@ -108,6 +109,7 @@ export default function AuditionsPage() {
               </CardContent>
             </Card>
           ) : (
+            <>
             <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-foreground">
@@ -120,25 +122,63 @@ export default function AuditionsPage() {
                   {castRoles.map((role) => (
                     <div
                       key={role.id}
-                      className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3 hover:bg-muted/50 transition-colors"
+                      className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 p-3 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        {role.role_type === "lead" && <Star className="h-4 w-4 text-gold fill-gold" />}
-                        <div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        {role.role_type === "lead" && <Star className="h-4 w-4 text-gold fill-gold shrink-0" />}
+                        <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">{role.role_name}</p>
                           <p className="text-xs text-muted-foreground">
                             {role.profiles?.full_name || "—"}
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={typeStyles[role.role_type] || ""}>
-                        {typeLabels[role.role_type] || role.role_type}
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="outline" className={typeStyles[role.role_type] || ""}>
+                          {typeLabels[role.role_type] || role.role_type}
+                        </Badge>
+                        {canEditCast && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-gold"
+                              onClick={() => {
+                                setEditingCastRole(role);
+                                setEditCastOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => {
+                                if (typeof window !== "undefined" && window.confirm("Bu kadro kaydını silmek istediğinize emin misiniz?")) {
+                                  deleteCastRole.mutate(role.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+            <EditCastRoleDialog
+              role={editingCastRole}
+              open={editCastOpen}
+              onOpenChange={(open) => {
+                setEditCastOpen(open);
+                if (!open) setEditingCastRole(null);
+              }}
+            />
+          </>
           )}
         </TabsContent>
       </Tabs>

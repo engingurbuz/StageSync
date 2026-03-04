@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Loader2, Upload, FileText, Music2 } from "lucide-react";
 import { useSongs } from "@/hooks/use-songs";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,11 +35,15 @@ export function AddSongDialog() {
   const [form, setForm] = useState({
     title: "",
     notes: "",
+    is_medley_part: false,
+    parent_song_id: "" as string,
+    medley_position: null as number | null,
   });
   const [sheetFile, setSheetFile] = useState<File | null>(null);
   const [midiFile, setMidiFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const { addSong } = useSongs();
+  const { addSong, songs } = useSongs();
+  const medleyParentOptions = songs.filter((s) => !s.parent_song_id);
 
   // Yetki kontrolü: repertuvar bölümünde oluşturma yetkisi
   const canAddSong = checkPermission(profile, "repertuvar", "create", permissions);
@@ -104,12 +115,14 @@ export function AddSongDialog() {
         audio_url: null,
         midi_url: midiUrl,
         production_id: null,
+        parent_song_id: form.is_medley_part && form.parent_song_id ? form.parent_song_id : null,
+        medley_position: form.is_medley_part && form.medley_position != null ? form.medley_position : null,
         created_by: user?.id || "",
       });
 
       toast.success("Şarkı başarıyla eklendi");
       setOpen(false);
-      setForm({ title: "", notes: "" });
+      setForm({ title: "", notes: "", is_medley_part: false, parent_song_id: "", medley_position: null });
       setSheetFile(null);
       setMidiFile(null);
     } catch (err: unknown) {
@@ -150,6 +163,53 @@ export function AddSongDialog() {
               className="bg-muted/30 border-border"
             />
           </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="is-medley"
+              checked={form.is_medley_part}
+              onChange={(e) => setForm({ ...form, is_medley_part: e.target.checked, parent_song_id: form.parent_song_id || "", medley_position: form.medley_position })}
+              className="accent-gold"
+            />
+            <Label htmlFor="is-medley" className="cursor-pointer text-sm">Medley parçası</Label>
+          </div>
+          {form.is_medley_part && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Medley / Ana şarkı</Label>
+                <Select
+                  value={form.parent_song_id}
+                  onValueChange={(v) => setForm({ ...form, parent_song_id: v })}
+                >
+                  <SelectTrigger className="bg-muted/30 border-border">
+                    <SelectValue placeholder="Seçin" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    {medleyParentOptions.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Parça sırası</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.medley_position ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                    setForm({ ...form, medley_position: v });
+                  }}
+                  placeholder="1"
+                  className="bg-muted/30 border-border"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Dosya Yükleme Alanları */}
           <div className="space-y-4 pt-2 border-t border-border">

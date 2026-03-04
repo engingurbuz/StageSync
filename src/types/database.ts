@@ -136,10 +136,22 @@ export interface Song {
   sheet_music_url: string | null;
   audio_url: string | null;
   midi_url: string | null;
+  parent_song_id: string | null;
+  medley_position: number | null;
   created_by: string;
   created_at: string;
   updated_at: string;
 }
+
+export interface AuditionSong {
+  id: string;
+  audition_id: string;
+  song_id: string;
+  order_index: number;
+  created_at: string;
+}
+
+export type SignupSelection = "lead" | "understudy" | "not_selected";
 
 export interface Audition {
   id: string;
@@ -207,6 +219,7 @@ export interface AuditionSignup {
   member_id: string;
   notes: string | null;
   video_url: string | null;
+  selected_role_type: SignupSelection | null;
   created_at: string;
 }
 
