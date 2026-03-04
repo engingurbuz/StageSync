@@ -14,6 +14,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ──────────────────────────────────────────────────────────────────────────────
 CREATE TYPE user_role AS ENUM (
   'admin',
+  'choir_leader',
   'section_leader',
   'creative_team',
   'member',

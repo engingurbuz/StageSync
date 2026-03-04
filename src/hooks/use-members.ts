@@ -42,31 +42,42 @@ export function useMembers() {
       if (error) {
         // Fallback: insert directly into profiles (for demo/dev)
         const roles = member.roles && member.roles.length > 0 ? member.roles : ["member"];
-        const { error: insertError } = await supabase.from("profiles").insert({
+        const insertData: Record<string, unknown> = {
           id: crypto.randomUUID(),
           email: member.email,
           full_name: member.full_name,
           voice_type: member.voice_type || null,
           phone: member.phone || null,
           role: roles[0] || "member",
-          roles: roles,
           status: "active",
-        });
-        if (insertError) throw insertError;
+        };
+        // Try with roles column first, fallback without
+        const { error: insertError } = await supabase.from("profiles").insert({ ...insertData, roles });
+        if (insertError) {
+          const { error: insertError2 } = await supabase.from("profiles").insert(insertData);
+          if (insertError2) throw insertError2;
+        }
         return;
       }
       // Update the profile with extra info
       if (data.user) {
         const roles = member.roles && member.roles.length > 0 ? member.roles : ["member"];
-        await supabase
+        const updateData: Record<string, unknown> = {
+          voice_type: member.voice_type || null,
+          phone: member.phone || null,
+          role: (roles[0] as Profile["role"]) || "member",
+        };
+        // Try with roles column first, fallback without
+        const { error: updateError } = await supabase
           .from("profiles")
-          .update({
-            voice_type: member.voice_type || null,
-            phone: member.phone || null,
-            role: (roles[0] as Profile["role"]) || "member",
-            roles: roles,
-          })
+          .update({ ...updateData, roles })
           .eq("id", data.user.id);
+        if (updateError) {
+          await supabase
+            .from("profiles")
+            .update(updateData)
+            .eq("id", data.user.id);
+        }
       }
     },
     onSuccess: () => {
@@ -83,7 +94,21 @@ export function useMembers() {
         .from("profiles")
         .update(updates)
         .eq("id", id);
-      if (error) throw error;
+      if (error) {
+        // If 'roles' column doesn't exist yet, retry without it
+        if (error.message?.includes("roles") || error.code === "PGRST204" || error.code === "42703") {
+          const { roles, ...rest } = updates;
+          if (Object.keys(rest).length > 0) {
+            const { error: retryError } = await supabase
+              .from("profiles")
+              .update(rest)
+              .eq("id", id);
+            if (retryError) throw retryError;
+            return;
+          }
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members"] });

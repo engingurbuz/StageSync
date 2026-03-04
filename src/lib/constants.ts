@@ -23,6 +23,7 @@ export const VOICE_TYPE_LABELS: Record<string, string> = Object.fromEntries(
 // Kullanıcı rolleri ve Türkçe etiketleri
 export const USER_ROLES: { value: UserRole; label: string }[] = [
   { value: "admin", label: "Admin" },
+  { value: "choir_leader", label: "Koro Şefi" },
   { value: "section_leader", label: "Partisyon Şefi" },
   { value: "creative_team", label: "Yaratıcı Ekip" },
   { value: "member", label: "Korist" },
@@ -76,6 +77,10 @@ export const DEFAULT_PERMISSIONS: Record<UserRole, Record<SystemSection, PermSet
   admin: {
     "ana-sayfa": all, uyeler: all, yoklama: all, repertuvar: all,
     secmeler: all, yaratici: all, duyurular: all, formlar: all, ayarlar: all,
+  },
+  choir_leader: {
+    "ana-sayfa": all, uyeler: all, yoklama: all, repertuvar: all,
+    secmeler: all, yaratici: all, duyurular: all, formlar: all, ayarlar: viewCreateEdit,
   },
   section_leader: {
     "ana-sayfa": viewOnly, uyeler: viewCreateEdit, yoklama: all,
@@ -141,15 +146,15 @@ export function checkPermission(
 // Geriye uyumlu yetki fonksiyonları
 export const canEditVoiceType = (role: UserRole | undefined, roles?: UserRole[]): boolean => {
   const r = roles && roles.length > 0 ? roles : role ? [role] : [];
-  return r.some((ro) => ro === "admin" || ro === "section_leader" || ro === "creative_team");
+  return r.some((ro) => ro === "admin" || ro === "choir_leader" || ro === "section_leader" || ro === "creative_team");
 };
 
 export const canEditRole = (role: UserRole | undefined, roles?: UserRole[]): boolean => {
   const r = roles && roles.length > 0 ? roles : role ? [role] : [];
-  return r.some((ro) => ro === "admin" || ro === "creative_team");
+  return r.some((ro) => ro === "admin" || ro === "choir_leader" || ro === "creative_team");
 };
 
 export const canEditMemberStatus = (role: UserRole | undefined, roles?: UserRole[]): boolean => {
   const r = roles && roles.length > 0 ? roles : role ? [role] : [];
-  return r.some((ro) => ro === "admin" || ro === "creative_team");
+  return r.some((ro) => ro === "admin" || ro === "choir_leader" || ro === "creative_team");
 };

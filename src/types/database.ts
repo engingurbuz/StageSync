@@ -3,7 +3,7 @@
 // Generated manually; regenerate with `supabase gen types typescript`
 // ============================================================================
 
-export type UserRole = "admin" | "section_leader" | "creative_team" | "member" | "observer";
+export type UserRole = "admin" | "choir_leader" | "section_leader" | "creative_team" | "member" | "observer";
 export type VoiceType = "soprano" | "soprano_1" | "soprano_2" | "alto" | "alto_1" | "alto_2" | "tenor" | "tenor_1" | "tenor_2" | "bass" | "bass_1" | "bass_2";
 export type MemberStatus = "active" | "inactive" | "alumni" | "pending";
 export type EventType = "rehearsal" | "performance" | "audition" | "meeting" | "workshop" | "social";
