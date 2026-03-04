@@ -47,7 +47,7 @@ export function CreateEventDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.start_time || !form.end_time) {
-      toast.error("BaÅŸlÄ±k, baÅŸlangÄ±Ã§ ve bitiÅŸ zamanÄ± gereklidir");
+      toast.error("Başlık, başlangıç ve bitiş zamanı gereklidir");
       return;
     }
     try {
@@ -66,7 +66,7 @@ export function CreateEventDialog() {
         production_id: null,
         created_by: user?.id || "",
       });
-      toast.success("Etkinlik baÅŸarÄ±yla oluÅŸturuldu");
+      toast.success("Etkinlik başarıyla oluşturuldu");
       setOpen(false);
       setForm({
         title: "",
@@ -80,7 +80,7 @@ export function CreateEventDialog() {
         is_mandatory: true,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Etkinlik oluÅŸturulurken hata oluÅŸtu";
+      const message = err instanceof Error ? err.message : "Etkinlik oluşturulurken hata oluştu";
       toast.error(message);
     }
   };
@@ -90,27 +90,27 @@ export function CreateEventDialog() {
       <DialogTrigger asChild>
         <Button className="bg-gold text-gold-foreground hover:bg-gold/90">
           <Plus className="mr-2 h-4 w-4" />
-          Etkinlik OluÅŸtur
+          Etkinlik Oluştur
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card border-border sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Yeni Etkinlik OluÅŸtur</DialogTitle>
+          <DialogTitle className="text-foreground">Yeni Etkinlik Oluştur</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="event-title">Etkinlik AdÄ± *</Label>
+            <Label htmlFor="event-title">Etkinlik Adı *</Label>
             <Input
               id="event-title"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="Ã–rn: Tam Kadro Prova"
+              placeholder="Örn: Tam Kadro Prova"
               className="bg-muted/30 border-border"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Etkinlik TÃ¼rÃ¼</Label>
+              <Label>Etkinlik Türü</Label>
               <Select
                 value={form.event_type}
                 onValueChange={(v) => setForm({ ...form, event_type: v as EventType })}
@@ -144,7 +144,7 @@ export function CreateEventDialog() {
                 onClick={() => setMapPickerOpen(true)}
               >
                 <MapPin className="h-4 w-4 mr-2" />
-                Haritadan konum seÃ§
+                Haritadan konum seç
               </Button>
             </div>
           </div>
@@ -211,7 +211,7 @@ export function CreateEventDialog() {
             disabled={addEvent.isPending}
           >
             {addEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Etkinlik OluÅŸtur
+            Etkinlik Oluştur
           </Button>
         </form>
       </DialogContent>
